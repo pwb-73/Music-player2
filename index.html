@@ -36,7 +36,19 @@ body::before {
 
 /* TOPBAR */
 #topbar { padding: 8px 24px; display: flex; align-items: center; gap: 16px; flex-shrink: 0; }
-.brand { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 3px; color: var(--text-dark); text-shadow: 0 1px 0 rgba(255,255,255,0.4); flex-shrink: 0; }
+.brand {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 38px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: var(--text-dark);
+  text-shadow: 0 2px 0 rgba(255,255,255,0.4), 0 2px 4px rgba(0,0,0,0.2);
+  flex-shrink: 0;
+  transform: rotate(-10deg);
+  display: inline-block;
+  line-height: 1;
+  padding: 4px 6px;
+}
 .brand span { color: var(--orange); }
 .vu-meter { display: flex; flex-direction: column; gap: 3px; padding: 6px 12px; background: #1a1008; border-radius: 4px; border: 1px solid #0a0804; box-shadow: inset 0 2px 6px rgba(0,0,0,0.8); flex-shrink: 0; }
 .vu-row { display: flex; gap: 2px; align-items: center; }
@@ -75,11 +87,12 @@ body::before {
 .sidebar-unit { padding: 10px 10px 10px 14px; }
 #sidebar-art {
   width: calc(100% - 20px); margin: 10px; aspect-ratio: 1; border-radius: 6px;
-  background: #1a1008; border: none;
+  background: transparent; border: none; box-shadow: none;
   display: flex; align-items: center; justify-content: center;
   font-size: 48px; overflow: hidden; flex-shrink: 0; transition: opacity 0.3s; cursor: default;
 }
-#sidebar-art img { width: 100%; height: 100%; object-fit: cover; border-radius: 5px; }
+/* contain keeps aspect ratio, fills the larger dimension — no cropping */
+#sidebar-art img { width: 100%; height: 100%; object-fit: contain; border-radius: 0; }
 .panel-label { font-family: 'Share Tech Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-light); margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid rgba(0,0,0,0.15); }
 .nav-item { display: flex; align-items: center; gap: 8px; padding: 7px 8px; border-radius: var(--radius-sm); cursor: pointer; font-size: 12px; color: var(--text-mid); transition: all 0.12s; border: 1px solid transparent; }
 .nav-item:hover { background: rgba(0,0,0,0.08); color: var(--text-dark); }
@@ -188,7 +201,7 @@ body::before {
 .player-art { width: 72px; height: 72px; border-radius: 6px; background: #1a1008; border: 1px solid #0a0804; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 30px; overflow: hidden; box-shadow: inset 0 2px 6px rgba(0,0,0,0.6); }
 .player-art img { width: 100%; height: 100%; object-fit: cover; }
 .player-info { flex: 1; min-width: 0; }
-.player-title { font-size: 18px; font-weight: 700; color: var(--text-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.player-title { font-size: 18px; font-weight: 700; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .player-artist { font-family: 'Share Tech Mono', monospace; font-size: 13px; color: var(--text-light); margin-top: 3px; }
 /* Right side: controls + shuffle/vol stacked */
 .player-right { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
@@ -232,7 +245,7 @@ body::before {
   #sidebar.open { display: flex; box-shadow: 8px 0 32px rgba(0,0,0,0.7); }
   #menu-btn { display: flex !important; }
   .vol-slider { width: 60px; }
-  .brand { font-size: 22px; }
+  .brand { font-size: 28px; }
 }
 </style>
 </head>
@@ -262,7 +275,7 @@ body::before {
     <div id="sidebar-overlay" onclick="toggleSidebar()"></div>
 
     <nav id="sidebar">
-      <div class="unit" style="margin:0;flex-shrink:0;">
+      <div class="unit" style="margin:0;flex-shrink:0;border:none;box-shadow:none;background:transparent;">
         <div id="sidebar-art" title="Two-finger tap to clear sort">♫</div>
       </div>
       <div class="unit sidebar-unit">
@@ -481,13 +494,12 @@ function restoreLibrary(e){
   e.target.value='';
 }
 
-// When files are imported after a restore, match metadata by filename
+// When files are imported after a restore, match metadata by stable ID (filename hash)
 function matchRestoredMeta(t){
   if(!window._restoredTracks)return;
-  const match=window._restoredTracks.find(r=>r.name===t.name||r.title===t.title);
+  // ID is now filename-based so it matches directly
+  const match=window._restoredTracks.find(r=>r.id===t.id||r.name===t.name);
   if(match){
-    // Restore the original ID so ratings/tags reconnect
-    t.id=match.id;
     if(match.title)t.title=match.title;
     if(match.artist&&match.artist!=='Unknown Artist')t.artist=match.artist;
     if(match.album&&match.album!=='Unknown Album')t.album=match.album;
@@ -535,12 +547,28 @@ function showView(view,el){currentView=view;document.querySelectorAll('.view').f
 
 // FILE IMPORT
 function triggerFileImport(){document.getElementById('file-input').click();}
+
+// Generate a stable numeric ID from a filename string
+function filenameToId(name){
+  let h=0;
+  for(let i=0;i<name.length;i++){h=Math.imul(31,h)+name.charCodeAt(i)|0;}
+  return String(h>>>0); // unsigned 32-bit, always same value for same name
+}
+
 function handleFiles(e){
   const files=Array.from(e.target.files);if(!files.length)return;
-  let loaded=0;showNotif(`LOADING ${files.length} FILE(S)...`);
+  let loaded=0, skipped=0;
+  showNotif(`LOADING ${files.length} FILE(S)...`);
   files.forEach(file=>{
+    const stableId=filenameToId(file.name);
+    // Skip if already in library (same filename = same ID)
+    if(library.find(t=>t.id===stableId)){
+      loaded++;skipped++;
+      if(loaded===files.length){showNotif(`✓ ADDED ${loaded-skipped} TRACK(S)${skipped?' ('+skipped+' ALREADY IN LIBRARY)':''}`);}
+      return;
+    }
     const url=URL.createObjectURL(file);
-    const t={id:Date.now()+Math.random(),url,file,name:file.name.replace(/\.(mp3|wav)$/i,''),title:'',artist:'Unknown Artist',album:'Unknown Album',composer:'Unknown',genre:'Unknown',year:'',format:file.name.split('.').pop().toUpperCase(),duration:0,art:null};
+    const t={id:stableId,url,file,name:file.name.replace(/\.(mp3|wav)$/i,''),title:'',artist:'Unknown Artist',album:'Unknown Album',composer:'Unknown',genre:'Unknown',year:'',format:file.name.split('.').pop().toUpperCase(),duration:0,art:null};
     const parts=t.name.split(' - ');
     if(parts.length>=2){t.artist=parts[0].trim();t.title=parts.slice(1).join(' - ').trim();}else t.title=t.name;
     matchRestoredMeta(t);
@@ -548,7 +576,7 @@ function handleFiles(e){
     const tmp=new Audio(url);
     tmp.addEventListener('loadedmetadata',()=>{t.duration=tmp.duration;done(t);});
     tmp.addEventListener('error',()=>done(t));
-    function done(track){library.push(track);loaded++;if(loaded===files.length){showNotif(`✓ ADDED ${loaded} TRACK(S)`);updateBadge();renderView();}}
+    function done(track){library.push(track);loaded++;if(loaded===files.length){showNotif(`✓ ADDED ${loaded-skipped} TRACK(S)${skipped?' ('+skipped+' ALREADY IN LIBRARY)':''}`);updateBadge();renderView();}}
   });
   e.target.value='';
 }
