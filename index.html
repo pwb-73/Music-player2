@@ -177,28 +177,35 @@ body::before {
 .empty-btn { margin-top: 20px; background: linear-gradient(180deg,var(--orange-bright),var(--orange-dark)); border: 1px solid var(--orange-dark); border-bottom: 2px solid #6a2808; color: #fff; padding: 10px 22px; border-radius: 4px; font-family: 'Share Tech Mono', monospace; font-size: 12px; letter-spacing: 1px; cursor: pointer; text-transform: uppercase; }
 
 /* PLAYER BAR */
-#player-bar { flex-shrink: 0; padding: 14px 20px 16px; }
-.player-inner { display: flex; flex-direction: column; gap: 10px; }
-.player-top { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+#player-bar { flex-shrink: 0; padding: 10px 16px 12px; }
+.player-inner { display: flex; flex-direction: column; gap: 8px; }
+.player-top { display: flex; align-items: center; gap: 14px; }
 .player-art { width: 72px; height: 72px; border-radius: 6px; background: #1a1008; border: 1px solid #0a0804; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 30px; overflow: hidden; box-shadow: inset 0 2px 6px rgba(0,0,0,0.6); }
 .player-art img { width: 100%; height: 100%; object-fit: cover; }
 .player-info { flex: 1; min-width: 0; }
 .player-title { font-size: 18px; font-weight: 700; color: var(--text-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .player-artist { font-family: 'Share Tech Mono', monospace; font-size: 13px; color: var(--text-light); margin-top: 3px; }
+/* Right side: controls + shuffle/vol stacked */
+.player-right { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
 .controls-group { display: flex; align-items: center; gap: 10px; padding: 8px 14px; background: linear-gradient(180deg,#b8a888,#a89870); border-radius: 6px; border: 1px solid #7a6848; box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 3px 6px rgba(0,0,0,0.3); }
 .ctrl { width: 56px; height: 56px; border-radius: 50%; background: radial-gradient(circle at 35% 35%,#c8b888,#8a7848); color: var(--text-dark); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 22px; box-shadow: 0 3px 6px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.3); transition: all 0.08s; flex-shrink: 0; border: none; }
 .ctrl:active { transform: scale(0.94); }
 #play-btn { width: 72px; height: 72px; border-radius: 50%; background: radial-gradient(circle at 35% 35%,var(--orange-bright),var(--orange-dark)); border: 3px solid var(--orange-dark); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 28px; box-shadow: 0 4px 12px rgba(180,60,0,0.5), inset 0 1px 0 rgba(255,255,255,0.3); transition: all 0.08s; flex-shrink: 0; }
 #play-btn:active { transform: scale(0.94); }
-.volume-group { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-.vol-label { font-family: 'Share Tech Mono', monospace; font-size: 12px; color: var(--text-light); letter-spacing: 1px; font-weight: 700; }
-.vol-slider { -webkit-appearance: none; width: 160px; height: 8px; border-radius: 4px; background: linear-gradient(90deg, var(--orange) 0%, var(--orange) var(--vol-pct,80%), #3a2818 var(--vol-pct,80%)); outline: none; cursor: pointer; }
+/* Shuffle + Volume stacked vertically */
+.shuffle-vol-stack { display: flex; flex-direction: column; align-items: stretch; gap: 6px; flex-shrink: 0; }
+.volume-group { display: flex; align-items: center; gap: 8px; }
+.vol-label { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-light); letter-spacing: 1px; font-weight: 700; flex-shrink: 0; }
+.vol-slider { -webkit-appearance: none; width: 150px; height: 8px; border-radius: 4px; background: linear-gradient(90deg, var(--orange) 0%, var(--orange) var(--vol-pct,80%), #3a2818 var(--vol-pct,80%)); outline: none; cursor: pointer; }
 .vol-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; border-radius: 50%; background: radial-gradient(circle at 35% 35%,#d8c898,#8a7848); border: 2px solid #6a5838; box-shadow: 0 2px 6px rgba(0,0,0,0.4); cursor: pointer; }
+#shuffle-btn { width: 100%; text-align: center; }
 .progress-row { display: flex; align-items: center; gap: 10px; }
 .time-lbl { font-family: 'Share Tech Mono', monospace; font-size: 13px; font-weight: 700; color: var(--text-light); min-width: 40px; }
 .time-lbl.r { text-align: right; }
 .prog-track { flex: 1; height: 10px; background: #1a1008; border-radius: 5px; border: 1px solid #0a0804; box-shadow: inset 0 1px 3px rgba(0,0,0,0.6); cursor: pointer; overflow: hidden; }
 .prog-fill { height: 100%; background: linear-gradient(90deg,var(--orange-bright),var(--orange)); border-radius: 5px; width: 0%; transition: width 0.2s linear; pointer-events: none; box-shadow: 0 0 8px rgba(240,112,48,0.6); }
+/* Fullscreen button */
+#fs-btn { font-size: 16px; padding: 5px 8px; line-height: 1; }
 
 /* MODAL */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(6px); z-index: 100; display: none; align-items: center; justify-content: center; padding: 20px; }
@@ -240,6 +247,9 @@ body::before {
     </div>
     <div class="topbar-btns">
       <button class="sel-btn" id="menu-btn" style="display:none" onclick="toggleSidebar()">MENU</button>
+      <button class="sel-btn" id="fs-btn" onclick="toggleFullscreen()" title="Toggle Fullscreen">⛶</button>
+      <button class="sel-btn" onclick="saveLibrary()">💾 SAVE</button>
+      <button class="sel-btn" onclick="triggerRestoreImport()">📂 RESTORE</button>
       <button class="sel-btn orange" onclick="openImportModal()">+ IMPORT</button>
     </div>
   </div>
@@ -361,16 +371,20 @@ body::before {
           <div class="player-title" id="player-title">NO TRACK SELECTED</div>
           <div class="player-artist" id="player-artist">— SELECT A TRACK TO BEGIN —</div>
         </div>
-        <div class="controls-group">
-          <button class="ctrl" onclick="prevTrack()">⏮</button>
-          <button id="play-btn" onclick="togglePlay()">▶</button>
-          <button class="ctrl" onclick="nextTrack()">⏭</button>
-          <button class="ctrl" id="stop-btn" onclick="stopTrack()">⏹</button>
-        </div>
-        <button class="sel-btn" id="shuffle-btn" onclick="toggleShuffle()">⇀ SHUFFLE</button>
-        <div class="volume-group">
-          <span class="vol-label">VOL</span>
-          <input type="range" class="vol-slider" id="vol-slider" min="0" max="1" step="0.01" value="0.8" oninput="setVolume(this.value)">
+        <div class="player-right">
+          <div class="controls-group">
+            <button class="ctrl" onclick="prevTrack()">⏮</button>
+            <button id="play-btn" onclick="togglePlay()">▶</button>
+            <button class="ctrl" onclick="nextTrack()">⏭</button>
+            <button class="ctrl" id="stop-btn" onclick="stopTrack()">⏹</button>
+          </div>
+          <div class="shuffle-vol-stack">
+            <button class="sel-btn" id="shuffle-btn" onclick="toggleShuffle()">⇀ SHUFFLE</button>
+            <div class="volume-group">
+              <span class="vol-label">VOL</span>
+              <input type="range" class="vol-slider" id="vol-slider" min="0" max="1" step="0.01" value="0.8" oninput="setVolume(this.value)">
+            </div>
+          </div>
         </div>
       </div>
       <div class="progress-row">
@@ -404,6 +418,7 @@ body::before {
 
 <div class="notif" id="notif"></div>
 <input type="file" id="file-input" accept=".mp3,.wav,audio/mpeg,audio/wav" multiple style="display:none" onchange="handleFiles(event)">
+<input type="file" id="restore-input" accept=".json" style="display:none" onchange="restoreLibrary(event)">
 
 <script>
 let library=[], queue=[], currentIndex=-1, isPlaying=false, isShuffle=false, minRating=0;
@@ -415,6 +430,93 @@ const audio=new Audio();
 audio.volume=0.8;
 
 function save(){localStorage.setItem('sv_ratings',JSON.stringify(ratings));localStorage.setItem('sv_tags',JSON.stringify(tags));localStorage.setItem('sv_track_tags',JSON.stringify(trackTags));}
+
+// SAVE / RESTORE LIBRARY METADATA
+function saveLibrary(){
+  const data={
+    version:1,
+    savedAt:new Date().toISOString(),
+    ratings,tags,trackTags,
+    tracks:library.map(t=>({
+      id:String(t.id),name:t.name,title:t.title,artist:t.artist,
+      album:t.album,composer:t.composer,genre:t.genre,year:t.year,
+      format:t.format,duration:t.duration
+    }))
+  };
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download='soundvault-library-'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showNotif('✓ LIBRARY SAVED');
+}
+
+function triggerRestoreImport(){document.getElementById('restore-input').click();}
+
+function restoreLibrary(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    try{
+      const data=JSON.parse(ev.target.result);
+      if(!data.version||!data.tracks){showNotif('⚠ INVALID SAVE FILE');return;}
+      // Restore metadata
+      ratings=data.ratings||{};
+      tags=data.tags||[];
+      trackTags=data.trackTags||{};
+      save();
+      // Build a lookup by name so re-imported files can be matched
+      window._restoredTracks=data.tracks;
+      showNotif(`✓ RESTORED: ${data.tracks.length} TRACKS — NOW RE-IMPORT YOUR MUSIC FILES`);
+      updateBadge();renderAll();renderTags();initRF();
+    }catch(err){showNotif('⚠ COULD NOT READ SAVE FILE');}
+  };
+  reader.readAsText(file);
+  e.target.value='';
+}
+
+// When files are imported after a restore, match metadata by filename
+function matchRestoredMeta(t){
+  if(!window._restoredTracks)return;
+  const match=window._restoredTracks.find(r=>r.name===t.name||r.title===t.title);
+  if(match){
+    // Restore the original ID so ratings/tags reconnect
+    t.id=match.id;
+    if(match.title)t.title=match.title;
+    if(match.artist&&match.artist!=='Unknown Artist')t.artist=match.artist;
+    if(match.album&&match.album!=='Unknown Album')t.album=match.album;
+    if(match.composer&&match.composer!=='Unknown')t.composer=match.composer;
+    if(match.genre&&match.genre!=='Unknown')t.genre=match.genre;
+    if(match.year)t.year=match.year;
+  }
+}
+
+// FULLSCREEN
+function toggleFullscreen(){
+  const btn=document.getElementById('fs-btn');
+  if(!document.fullscreenElement&&!document.webkitFullscreenElement){
+    const el=document.documentElement;
+    if(el.requestFullscreen)el.requestFullscreen();
+    else if(el.webkitRequestFullscreen)el.webkitRequestFullscreen();
+    btn.textContent='⛶';btn.title='Exit Fullscreen';
+    showNotif('FULLSCREEN ON');
+  } else {
+    if(document.exitFullscreen)document.exitFullscreen();
+    else if(document.webkitExitFullscreen)document.webkitExitFullscreen();
+    btn.textContent='⛶';btn.title='Toggle Fullscreen';
+    showNotif('FULLSCREEN OFF');
+  }
+}
+document.addEventListener('fullscreenchange',()=>{
+  const btn=document.getElementById('fs-btn');if(!btn)return;
+  btn.classList.toggle('active',!!(document.fullscreenElement||document.webkitFullscreenElement));
+});
+document.addEventListener('webkitfullscreenchange',()=>{
+  const btn=document.getElementById('fs-btn');if(!btn)return;
+  btn.classList.toggle('active',!!(document.fullscreenElement||document.webkitFullscreenElement));
+});
 
 // VU METER
 let vuAnimFrame;
@@ -437,6 +539,7 @@ function handleFiles(e){
     const t={id:Date.now()+Math.random(),url,file,name:file.name.replace(/\.(mp3|wav)$/i,''),title:'',artist:'Unknown Artist',album:'Unknown Album',composer:'Unknown',genre:'Unknown',year:'',format:file.name.split('.').pop().toUpperCase(),duration:0,art:null};
     const parts=t.name.split(' - ');
     if(parts.length>=2){t.artist=parts[0].trim();t.title=parts.slice(1).join(' - ').trim();}else t.title=t.name;
+    matchRestoredMeta(t);
     extractID3(file,t);
     const tmp=new Audio(url);
     tmp.addEventListener('loadedmetadata',()=>{t.duration=tmp.duration;done(t);});
