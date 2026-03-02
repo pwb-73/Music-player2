@@ -291,10 +291,10 @@ body::before {
         <div class="nav-item" onclick="showView('queue',this)"><span class="nav-icon">≡</span> Up Next</div>
       </div>
       <div class="import-panel">
-        <div class="import-drop" onclick="triggerFileImport()">
+        <div class="import-drop" onclick="openImportModal()">
           <div class="di">📁</div>
           <strong>Add Music Files</strong>
-          <span>MP3 · WAV from your device</span>
+          <span>Files or folder</span>
         </div>
       </div>
     </nav>
@@ -417,13 +417,13 @@ body::before {
 <div class="modal-overlay" id="import-modal">
   <div class="modal">
     <div class="modal-title">Import Music</div>
-    <div class="modal-opt" onclick="triggerFolderImport();closeModal()">
+    <div class="modal-opt" onclick="closeModal();setTimeout(triggerFolderImport,80)">
       <div class="modal-opt-icon">📂</div>
-      <div><strong>Entire Folder</strong><span>SELECT A FOLDER — ALL MP3/WAV INSIDE LOADED</span></div>
+      <div><strong>Entire Folder</strong><span>SELECT A FOLDER — ALL AUDIO FILES INSIDE LOADED</span></div>
     </div>
-    <div class="modal-opt" onclick="triggerFileImport();closeModal()">
+    <div class="modal-opt" onclick="closeModal();setTimeout(triggerFileImport,80)">
       <div class="modal-opt-icon">🎵</div>
-      <div><strong>Individual Files</strong><span>SELECT ONE OR MORE MP3 OR WAV FILES</span></div>
+      <div><strong>Individual Files</strong><span>SELECT ONE OR MORE AUDIO FILES</span></div>
     </div>
     <div class="modal-opt" onclick="importDropbox()">
       <div class="modal-opt-icon">📦</div>
@@ -438,7 +438,8 @@ body::before {
 </div>
 
 <div class="notif" id="notif"></div>
-<input type="file" id="file-input" accept=".mp3,.wav,audio/mpeg,audio/wav" multiple style="display:none" onchange="handleFiles(event)">
+<input type="file" id="file-input" multiple style="display:none" onchange="handleFiles(event)">
+<input type="file" id="folder-input" webkitdirectory multiple style="display:none" onchange="handleFolderFiles(event)">
 <input type="file" id="restore-input" accept=".json" style="display:none" onchange="restoreLibrary(event)">
 
 <script>
@@ -550,123 +551,98 @@ function toggleSidebar(){document.getElementById('sidebar').classList.toggle('op
 function showView(view,el){currentView=view;document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById('view-'+view).classList.add('active');document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));if(el)el.classList.add('active');if(window.innerWidth<=700)toggleSidebar();renderView();}
 
 // FILE IMPORT
-function triggerFileImport(){document.getElementById('file-input').click();}
-
-// FOLDER IMPORT — uses showDirectoryPicker (Safari 15.2+) with webkitdirectory fallback
-async function triggerFolderImport(){
-  // Try modern File System Access API first
-  if(window.showDirectoryPicker){
-    try{
-      const dirHandle=await window.showDirectoryPicker({mode:'read'});
-      showNotif('SCANNING FOLDER...');
-      const files=await collectFilesFromDir(dirHandle);
-      if(!files.length){showNotif('NO MP3/WAV FILES FOUND');return;}
-      processFileList(files);
-    }catch(err){
-      if(err.name!=='AbortError') fallbackFolderPicker();
-    }
-  } else {
-    fallbackFolderPicker();
-  }
-}
-
-// Recursively walk a directory handle and collect audio files
-async function collectFilesFromDir(dirHandle){
-  const files=[];
-  for await(const entry of dirHandle.values()){
-    if(entry.kind==='file'){
-      const file=await entry.getFile();
-      if(/\.(mp3|wav)$/i.test(file.name)) files.push(file);
-    } else if(entry.kind==='directory'){
-      const sub=await collectFilesFromDir(entry);
-      files.push(...sub);
-    }
-  }
-  return files;
-}
-
-// Fallback: hidden input with webkitdirectory for older Safari
-function fallbackFolderPicker(){
-  let inp=document.getElementById('folder-input');
-  if(!inp){
-    inp=document.createElement('input');
-    inp.type='file';inp.id='folder-input';
-    inp.setAttribute('webkitdirectory','');
-    inp.setAttribute('multiple','');
-    inp.style.display='none';
-    inp.addEventListener('change',e=>{
-      const files=Array.from(e.target.files).filter(f=>/\.(mp3|wav)$/i.test(f.name));
-      if(files.length) processFileList(files);
-      else showNotif('NO MP3/WAV FILES FOUND');
-      e.target.value='';
-    });
-    document.body.appendChild(inp);
-  }
+function triggerFileImport(){
+  const inp=document.getElementById('file-input');
+  inp.value='';
   inp.click();
 }
 
-// Shared processing for both file picker and folder picker
+function triggerFolderImport(){
+  const inp=document.getElementById('folder-input');
+  inp.value='';
+  inp.click();
+}
+
+function handleFiles(e){
+  const all=Array.from(e.target.files);
+  const files=all.filter(f=>/\.(mp3|wav|m4a|aac|ogg|flac)$/i.test(f.name)||f.type.startsWith('audio/'));
+  e.target.value='';
+  if(!files.length){
+    // If nothing matched the filter, try all files (user may have selected audio files Safari doesn't recognise)
+    if(all.length) processFileList(all);
+    else showNotif('NO AUDIO FILES FOUND');
+    return;
+  }
+  processFileList(files);
+}
+
+function handleFolderFiles(e){
+  const all=Array.from(e.target.files);
+  e.target.value='';
+  if(!all.length){showNotif('NO FILES FOUND IN FOLDER');return;}
+  // Accept anything audio-like; filter loosely so Safari doesn't drop files
+  const files=all.filter(f=>/\.(mp3|wav|m4a|aac|ogg|flac)$/i.test(f.name)||f.type.startsWith('audio/'));
+  processFileList(files.length?files:all);
+}
+
+// Shared processing
 function processFileList(files){
   if(!files.length)return;
-  let resolved=0,skipped=0;
   const total=files.length;
+  let resolved=0, skipped=0, added=0;
   showNotif(`LOADING ${total} FILE(S)...`);
 
-  // Render progress updates as tracks arrive, not just at the end
-  let renderPending=false;
+  // Debounced render so UI updates progressively
+  let renderTimer=null;
   function scheduleRender(){
-    if(renderPending)return;
-    renderPending=true;
-    setTimeout(()=>{renderPending=false;updateBadge();renderView();},120);
+    clearTimeout(renderTimer);
+    renderTimer=setTimeout(()=>{updateBadge();renderView();},150);
   }
 
-  // Safety net: after 8 seconds, render whatever we have so far
+  // Global safety net: after 10s force a final render
   const safetyTimer=setTimeout(()=>{
-    if(resolved<total){
-      const added=library.length;
-      showNotif(`✓ LOADED ${added} TRACK(S) — ${total-resolved} SKIPPED (UNREADABLE)`);
-      updateBadge();renderView();
-    }
-  },8000);
+    showNotif(`✓ LOADED ${added} TRACK(S)`);
+    updateBadge();renderView();
+  },10000);
 
   function done(){
     resolved++;
     scheduleRender();
-    if(resolved===total){
+    if(resolved>=total){
       clearTimeout(safetyTimer);
-      const added=resolved-skipped;
-      showNotif(`✓ ADDED ${added} TRACK(S)${skipped?' ('+skipped+' ALREADY IN LIBRARY)':''}`);
+      clearTimeout(renderTimer);
+      showNotif(`✓ ADDED ${added} TRACK(S)${skipped?' · '+skipped+' ALREADY IN LIBRARY':''}`);
       updateBadge();renderView();
     }
   }
 
   files.forEach(file=>{
     const stableId=filenameToId(file.name);
-    if(library.find(t=>t.id===stableId)){
-      skipped++;done();
-      return;
-    }
+    if(library.find(t=>t.id===stableId)){skipped++;done();return;}
     const url=URL.createObjectURL(file);
-    const t={id:stableId,url,file,name:file.name.replace(/\.(mp3|wav)$/i,''),title:'',artist:'Unknown Artist',album:'Unknown Album',composer:'Unknown',genre:'Unknown',year:'',format:file.name.split('.').pop().toUpperCase(),duration:0,art:null};
+    const ext=(file.name.split('.').pop()||'').toUpperCase();
+    const t={
+      id:stableId,url,file,
+      name:file.name.replace(/\.[^.]+$/,''),
+      title:'',artist:'Unknown Artist',album:'Unknown Album',
+      composer:'Unknown',genre:'Unknown',year:'',
+      format:ext,duration:0,art:null
+    };
     const parts=t.name.split(' - ');
-    if(parts.length>=2){t.artist=parts[0].trim();t.title=parts.slice(1).join(' - ').trim();}else t.title=t.name;
+    if(parts.length>=2){t.artist=parts[0].trim();t.title=parts.slice(1).join(' - ').trim();}
+    else t.title=t.name;
     matchRestoredMeta(t);
-    library.push(t); // add immediately so it shows up fast
+    library.push(t);
+    added++;
     extractID3(file,t);
+    // Load duration — give each file 6s before moving on
     const tmp=new Audio();
     tmp.preload='metadata';
-    // Give each file a 5s timeout for metadata
-    const metaTimer=setTimeout(()=>done(),5000);
-    tmp.addEventListener('loadedmetadata',()=>{clearTimeout(metaTimer);t.duration=tmp.duration;done();},{once:true});
-    tmp.addEventListener('error',()=>{clearTimeout(metaTimer);done();},{once:true});
+    const tmo=setTimeout(()=>done(),6000);
+    tmp.addEventListener('loadedmetadata',()=>{clearTimeout(tmo);t.duration=tmp.duration;done();},{once:true});
+    tmp.addEventListener('error',()=>{clearTimeout(tmo);done();},{once:true});
     tmp.src=url;
   });
-}
-
-function handleFiles(e){
-  const files=Array.from(e.target.files).filter(f=>/\.(mp3|wav)$/i.test(f.name));
-  e.target.value='';
-  processFileList(files);
 }
 
 function extractID3(file,obj){
