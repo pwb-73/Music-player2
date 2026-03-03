@@ -74,7 +74,13 @@ body::before {
 .sel-btn.orange { background: linear-gradient(180deg, var(--orange-bright), var(--orange), var(--orange-dark)); border-color: var(--orange-dark); border-bottom-color: #6a2808; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
 .sel-btn.active { background: linear-gradient(180deg, var(--orange), var(--orange-dark)); border-color: var(--orange-dark); color: #fff; text-shadow: 0 1px 1px rgba(0,0,0,0.4); }
 /* Topbar action buttons: larger bold text */
-.topbar-btns .sel-btn { font-size: 16px; font-weight: 900; padding: 9px 18px; letter-spacing: 2px; }
+.topbar-btns .sel-btn {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 17px;
+  font-weight: 900;
+  padding: 10px 20px;
+  letter-spacing: 1.5px;
+}
 /* Fullscreen button: large icon */
 #fs-btn { font-size: 22px; padding: 4px 10px; line-height: 1; font-weight: 900; }
 /* Shuffle button: larger bold */
@@ -286,9 +292,9 @@ body::before {
 /* Right side: controls + shuffle/vol stacked */
 .player-right { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
 .controls-group { display: flex; align-items: center; gap: 10px; padding: 8px 14px; background: linear-gradient(180deg,#b8a888,#a89870); border-radius: 6px; border: 1px solid #7a6848; box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 3px 6px rgba(0,0,0,0.3); }
-.ctrl { width: 56px; height: 56px; border-radius: 50%; background: radial-gradient(circle at 35% 35%,#c8b888,#8a7848); color: var(--text-dark); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 30px; box-shadow: 0 3px 6px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.3); transition: all 0.08s; flex-shrink: 0; border: none; line-height: 1; }
+.ctrl { width: 56px; height: 56px; border-radius: 50%; background: radial-gradient(circle at 35% 35%,#c8b888,#8a7848); color: var(--text-dark); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 34px; line-height: 1; padding: 0; box-shadow: 0 3px 6px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.3); transition: all 0.08s; flex-shrink: 0; border: none; }
 .ctrl:active { transform: scale(0.94); }
-#play-btn { width: 72px; height: 72px; border-radius: 50%; background: radial-gradient(circle at 35% 35%,var(--orange-bright),var(--orange-dark)); border: 3px solid var(--orange-dark); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 38px; box-shadow: 0 4px 12px rgba(180,60,0,0.5), inset 0 1px 0 rgba(255,255,255,0.3); transition: all 0.08s; flex-shrink: 0; line-height: 1; }
+#play-btn { width: 72px; height: 72px; border-radius: 50%; background: radial-gradient(circle at 35% 35%,var(--orange-bright),var(--orange-dark)); border: 3px solid var(--orange-dark); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 44px; line-height: 1; padding: 0; box-shadow: 0 4px 12px rgba(180,60,0,0.5), inset 0 1px 0 rgba(255,255,255,0.3); transition: all 0.08s; flex-shrink: 0; }
 #play-btn:active { transform: scale(0.94); }
 /* Shuffle + Volume stacked vertically */
 .shuffle-vol-stack { display: flex; flex-direction: column; align-items: stretch; gap: 28px; flex-shrink: 0; }
@@ -308,12 +314,12 @@ body::before {
 @media (max-height: 850px) {
   .brand { font-size: 36px; }
   #topbar { padding: 5px 16px; gap: 10px; }
-  .topbar-btns .sel-btn { font-size: 13px; padding: 6px 12px; }
+  .topbar-btns .sel-btn { font-size: 14px; padding: 7px 13px; }
   #fs-btn { font-size: 18px; padding: 3px 8px; }
   #player-bar { padding: 6px 12px 8px; }
   .player-inner { gap: 5px; }
-  .ctrl { width: 44px; height: 44px; font-size: 24px; }
-  #play-btn { width: 56px; height: 56px; font-size: 30px; }
+  .ctrl { width: 44px; height: 44px; font-size: 26px; }
+  #play-btn { width: 56px; height: 56px; font-size: 34px; }
   .player-art { width: 56px; height: 56px; font-size: 22px; }
   .controls-group { gap: 7px; padding: 6px 10px; }
   .shuffle-vol-stack { gap: 16px; }
@@ -328,8 +334,8 @@ body::before {
 @media (max-height: 700px) {
   .brand { font-size: 28px; }
   #topbar { padding: 4px 12px; }
-  .ctrl { width: 36px; height: 36px; font-size: 20px; }
-  #play-btn { width: 46px; height: 46px; font-size: 24px; }
+  .ctrl { width: 36px; height: 36px; font-size: 21px; }
+  #play-btn { width: 46px; height: 46px; font-size: 27px; }
   .player-art { width: 46px; height: 46px; }
   .shuffle-vol-stack { gap: 10px; }
   #shuffle-btn { font-size: 11px; padding: 4px 8px; }
@@ -818,11 +824,12 @@ function extractID3(file,obj){
             // Update displays — works whether or not this is the current track
             const libIdx=library.indexOf(obj);
             if(libIdx===currentIndex){
-              document.getElementById('sidebar-art').innerHTML=`<img src="${obj.art}">`;
-              document.getElementById('player-art').innerHTML=`<img src="${obj.art}">`;
+              setArtEl(document.getElementById('sidebar-art'), obj.art);
+              setArtEl(document.getElementById('player-art'), obj.art);
+              updateNowPlayingOverlay();
             } else if(currentIndex<0&&libIdx===0){
               // First track ever imported — show its art in sidebar as preview
-              document.getElementById('sidebar-art').innerHTML=`<img src="${obj.art}">`;
+              setArtEl(document.getElementById('sidebar-art'), obj.art);
             }
             renderView();
           }
@@ -902,10 +909,12 @@ function renderAll(){
 }
 
 function rowHTML(t){
-  const r=ratings[t.id]||0;const playing=library.indexOf(t)===currentIndex;
+  const libIdx=library.indexOf(t);
+  const r=ratings[t.id]||0;
+  const playing=libIdx===currentIndex;
   const stars=[1,2,3,4,5].map(s=>`<span class="t-star ${s<=r?'on':''}" onclick="setRating('${t.id}',${s},event)">★</span>`).join('');
   const eq=playing?`<span class="eq-inline"><span class="eq-b"></span><span class="eq-b"></span><span class="eq-b"></span></span>`:'';
-  return`<tr class="${playing?'playing':''}" onclick="playTrack(${library.indexOf(t)})">
+  return`<tr class="${playing?'playing':''}" data-lib-idx="${libIdx}" onclick="playTrack(${libIdx})">
     <td class="col-genre">${esc(t.genre||'—')}</td>
     <td class="col-artist">${esc(t.artist)}</td>
     <td class="col-year">${esc(t.year||'—')}</td>
@@ -945,17 +954,24 @@ function initRF(){const el=document.getElementById('rf-stars');el.innerHTML=[0,1
 function setMinR(r){minRating=r;initRF();renderAll();}
 
 // ALBUM ART
-function updateArtDisplay(){
-  const sa=document.getElementById('sidebar-art');
-  const pa=document.getElementById('player-art');
-  if(currentIndex>=0&&library[currentIndex]&&library[currentIndex].art){
-    const url=library[currentIndex].art;
-    sa.innerHTML=`<img src="${url}">`;
-    pa.innerHTML=`<img src="${url}">`;
+function setArtEl(el, url){
+  if(!el)return;
+  if(url){
+    // Create img fresh each time to force reload
+    const img=document.createElement('img');
+    img.src=url;
+    img.style.cssText='width:100%;height:100%;object-fit:cover;display:block;';
+    while(el.firstChild)el.removeChild(el.firstChild);
+    el.appendChild(img);
   } else {
-    sa.innerHTML='♫';
-    pa.innerHTML='♫';
+    el.innerHTML='♫';
   }
+}
+
+function updateArtDisplay(){
+  const url=(currentIndex>=0&&library[currentIndex])?library[currentIndex].art:null;
+  setArtEl(document.getElementById('sidebar-art'), url);
+  setArtEl(document.getElementById('player-art'), url);
   updateNowPlayingOverlay();
 }
 
@@ -1164,10 +1180,7 @@ function updatePlayBtn(){
     const tb=document.getElementById(id);
     if(!tb)return;
     new MutationObserver(()=>{
-      Array.from(tb.querySelectorAll('tr')).forEach(tr=>{
-        // Extract library index from onclick attr
-        const m=(tr.getAttribute('onclick')||'').match(/playTrack\((\d+)\)/);
-        if(m)tr.setAttribute('data-lib-idx',m[1]);
+      Array.from(tb.querySelectorAll('tr[data-lib-idx]')).forEach(tr=>{
         attachSwipe(tr);
       });
     }).observe(tb,{childList:true});
@@ -1182,13 +1195,16 @@ function updatePlayBtn(){
 
 // PLAYTRACK — full definition including NP overlay sync
 function playTrack(idx){
-  if(idx<0||idx>=library.length)return;const t=library[idx];
+  if(idx<0||idx>=library.length)return;
+  currentIndex=idx;const t=library[idx];
   audio.src=t.url;audio.volume=parseFloat(document.getElementById('vol-slider').value);
   audio.play().then(()=>{isPlaying=true;updatePlayBtn();clearTimeout(vuAnimFrame);animateVU();}).catch(()=>{});
   document.getElementById('player-title').textContent=(t.title||t.name).toUpperCase();
   document.getElementById('player-artist').textContent=t.artist.toUpperCase()+(t.album!=='Unknown Album'?' — '+t.album.toUpperCase():'');
   updateArtDisplay();renderView();
   updateNowPlayingOverlay();
+  // Retry art display after a short delay in case ID3 parsing finishes after playTrack fires
+  setTimeout(()=>{ if(currentIndex===idx) updateArtDisplay(); }, 800);
 }
 
 document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(e.code==='Space'){e.preventDefault();togglePlay();}if(e.code==='ArrowRight')nextTrack();if(e.code==='ArrowLeft')prevTrack();if(e.code==='KeyS')toggleShuffle();});
