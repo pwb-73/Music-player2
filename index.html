@@ -218,67 +218,124 @@ body::before {
 }
 #swipe-delete-btn.visible { display: flex; }
 
-/* NOW PLAYING OVERLAY */
+/* NOW PLAYING OVERLAY — full bleed art with superimposed controls */
 #np-overlay {
   position: fixed; inset: 0; z-index: 300;
-  background: #0d0804;
-  display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
-  padding: env(safe-area-inset-top, 16px) 24px 24px;
+  display: flex; flex-direction: column;
   opacity: 0; pointer-events: none;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.35s ease;
+  overflow: hidden;
 }
 #np-overlay.open { opacity: 1; pointer-events: auto; }
+
+/* Art fills the entire screen */
+#np-bg {
+  position: absolute; inset: 0;
+  background: #0d0804;
+}
+#np-bg img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: blur(0px);
+}
+/* Dark gradient so text is readable over any artwork */
+#np-overlay::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0,0,0,0.45) 0%,
+    rgba(0,0,0,0.1) 30%,
+    rgba(0,0,0,0.1) 55%,
+    rgba(0,0,0,0.75) 80%,
+    rgba(0,0,0,0.92) 100%
+  );
+  pointer-events: none; z-index: 1;
+}
+
+/* All UI sits above the gradient */
+#np-ui {
+  position: relative; z-index: 2;
+  display: flex; flex-direction: column;
+  height: 100%;
+  padding: env(safe-area-inset-top, 20px) 28px env(safe-area-inset-bottom, 28px);
+}
+
+/* Close button — top right */
 #np-close {
-  align-self: flex-end; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 20px; padding: 6px 16px; font-family: 'Share Tech Mono', monospace;
-  font-size: 11px; letter-spacing: 1.5px; color: var(--cream); cursor: pointer;
-  margin-bottom: 20px; margin-top: 8px;
+  align-self: flex-end;
+  background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 20px; padding: 7px 18px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px; letter-spacing: 1.5px; color: rgba(255,255,255,0.85);
+  cursor: pointer; margin-top: 8px; backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
-#np-art-wrap {
-  width: min(70vw, 380px); aspect-ratio: 1;
-  border-radius: 16px; overflow: hidden;
-  background: #1a1008;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 80px; flex-shrink: 0;
-  box-shadow: 0 24px 60px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.06);
-}
-#np-art-wrap img { width: 100%; height: 100%; object-fit: contain; }
+
+/* Spacer pushes title/controls to the bottom */
+#np-spacer { flex: 1; }
+
+/* Track info */
 #np-title {
-  margin-top: 28px; font-size: 22px; font-weight: 800;
-  color: #fff; text-align: center; letter-spacing: 0.5px;
-  max-width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: 30px; font-weight: 800;
+  color: #fff; letter-spacing: 0.3px;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.8);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  margin-bottom: 6px;
 }
 #np-artist {
-  font-family: 'Share Tech Mono', monospace; font-size: 13px;
-  color: var(--text-light); margin-top: 6px; text-align: center;
-  max-width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-family: 'Share Tech Mono', monospace; font-size: 14px;
+  color: rgba(255,255,255,0.7);
+  text-shadow: 0 1px 6px rgba(0,0,0,0.8);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  margin-bottom: 20px;
 }
+
+/* Progress bar */
+.np-prog-row {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 28px;
+}
+.np-prog-track {
+  flex: 1; height: 4px; background: rgba(255,255,255,0.25); border-radius: 2px;
+  cursor: pointer; overflow: hidden; border: none;
+}
+.np-prog-fill {
+  height: 100%;
+  background: #fff;
+  border-radius: 2px; width: 0%;
+  transition: width 0.2s linear; pointer-events: none;
+}
+.np-time {
+  font-family: 'Share Tech Mono', monospace; font-size: 12px;
+  color: rgba(255,255,255,0.7); min-width: 38px;
+}
+.np-time.r { text-align: right; }
+
+/* Transport controls */
 .np-controls {
-  display: flex; align-items: center; gap: 18px; margin-top: 32px;
+  display: flex; align-items: center; justify-content: center;
+  gap: 24px; margin-bottom: 8px;
 }
 .np-ctrl {
-  width: 54px; height: 54px; border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #c8b888, #8a7848);
-  border: none; color: var(--text-dark); font-size: 20px;
+  width: 62px; height: 62px; border-radius: 50%;
+  background: rgba(0,0,0,0.4);
+  border: 1px solid rgba(255,255,255,0.25);
+  color: #fff; font-size: 28px; line-height: 1; padding: 0;
   display: flex; align-items: center; justify-content: center;
-  cursor: pointer; box-shadow: 0 3px 8px rgba(0,0,0,0.5);
-  transition: transform 0.08s;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  transition: transform 0.08s, background 0.1s;
 }
-.np-ctrl:active { transform: scale(0.92); }
+.np-ctrl:active { transform: scale(0.92); background: rgba(0,0,0,0.6); }
 #np-play-btn {
-  width: 72px; height: 72px; font-size: 28px;
-  background: radial-gradient(circle at 35% 35%, var(--orange-bright), var(--orange-dark));
-  color: #fff; border: 3px solid var(--orange-dark);
-  box-shadow: 0 6px 20px rgba(180,60,0,0.5);
+  width: 80px; height: 80px; font-size: 38px;
+  background: rgba(212,98,26,0.85);
+  border: 2px solid rgba(255,255,255,0.3);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.5);
 }
-.np-prog-row { display: flex; align-items: center; gap: 12px; width: min(70vw,380px); margin-top: 24px; }
-.np-prog-track {
-  flex: 1; height: 6px; background: #2a1a08; border-radius: 3px;
-  border: 1px solid #0a0804; cursor: pointer; overflow: hidden;
-}
-.np-prog-fill { height: 100%; background: linear-gradient(90deg,var(--orange-bright),var(--orange)); border-radius: 3px; width: 0%; transition: width 0.2s linear; pointer-events: none; }
-.np-time { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-light); min-width: 36px; }
-.np-time.r { text-align: right; }
 
 /* PLAYER BAR */
 #player-bar { flex-shrink: 0; padding: 10px 16px 12px; }
@@ -532,21 +589,24 @@ body::before {
 
 </div>
 
-<!-- NOW PLAYING OVERLAY -->
+<!-- NOW PLAYING OVERLAY — full bleed art -->
 <div id="np-overlay">
-  <button id="np-close" onclick="closeNowPlaying()">▾ CLOSE</button>
-  <div id="np-art-wrap">♫</div>
-  <div id="np-title">NO TRACK</div>
-  <div id="np-artist">—</div>
-  <div class="np-prog-row">
-    <span class="np-time" id="np-cur">0:00</span>
-    <div class="np-prog-track" onclick="npSeek(event)"><div class="np-prog-fill" id="np-prog-fill"></div></div>
-    <span class="np-time r" id="np-tot">0:00</span>
-  </div>
-  <div class="np-controls">
-    <button class="np-ctrl" onclick="prevTrack()">⏮</button>
-    <button class="np-ctrl" id="np-play-btn" onclick="togglePlay()">▶</button>
-    <button class="np-ctrl" onclick="nextTrack()">⏭</button>
+  <div id="np-bg">♫</div>
+  <div id="np-ui">
+    <button id="np-close" onclick="closeNowPlaying()">▾ CLOSE</button>
+    <div id="np-spacer"></div>
+    <div id="np-title">NO TRACK</div>
+    <div id="np-artist">—</div>
+    <div class="np-prog-row">
+      <span class="np-time" id="np-cur">0:00</span>
+      <div class="np-prog-track" onclick="npSeek(event)"><div class="np-prog-fill" id="np-prog-fill"></div></div>
+      <span class="np-time r" id="np-tot">0:00</span>
+    </div>
+    <div class="np-controls">
+      <button class="np-ctrl" onclick="prevTrack()">⏮</button>
+      <button class="np-ctrl" id="np-play-btn" onclick="togglePlay()">▶</button>
+      <button class="np-ctrl" onclick="nextTrack()">⏭</button>
+    </div>
   </div>
 </div>
 
@@ -1032,19 +1092,27 @@ initVU();initRF();updateBadge();renderAll();
 // NOW PLAYING OVERLAY
 function openNowPlaying(){
   const ov=document.getElementById('np-overlay');
-  updateNowPlayingOverlay();
   ov.classList.add('open');
+  updateNowPlayingOverlay();
 }
 function closeNowPlaying(){
   document.getElementById('np-overlay').classList.remove('open');
 }
 function updateNowPlayingOverlay(){
-  if(!document.getElementById('np-overlay').classList.contains('open'))return;
+  const ov=document.getElementById('np-overlay');
   const t=currentIndex>=0?library[currentIndex]:null;
-  const artWrap=document.getElementById('np-art-wrap');
-  artWrap.innerHTML=t&&t.art?`<img src="${t.art}">`:'♫';
+  const bg=document.getElementById('np-bg');
+  if(t&&t.art){
+    // Only update image if src changed
+    let img=bg.querySelector('img');
+    if(!img){img=document.createElement('img');bg.innerHTML='';bg.appendChild(img);}
+    if(img.src!==t.art)img.src=t.art;
+  } else {
+    bg.innerHTML='';
+    bg.style.background='#0d0804';
+  }
   document.getElementById('np-title').textContent=t?(t.title||t.name).toUpperCase():'NO TRACK';
-  document.getElementById('np-artist').textContent=t?t.artist.toUpperCase()+( t.album!=='Unknown Album'?' — '+t.album.toUpperCase():''):'—';
+  document.getElementById('np-artist').textContent=t?t.artist.toUpperCase()+(t.album!=='Unknown Album'?' — '+t.album.toUpperCase():''):'—';
   document.getElementById('np-play-btn').textContent=isPlaying?'⏸':'▶';
 }
 function npSeek(e){if(!audio.duration)return;const r=e.currentTarget.getBoundingClientRect();audio.currentTime=((e.clientX-r.left)/r.width)*audio.duration;}
