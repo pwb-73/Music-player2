@@ -54,7 +54,7 @@ body::before {
   letter-spacing: -1px; color: var(--text-dark);
   flex-shrink: 0; display: inline-block;
   line-height: 0.9; padding: 2px 4px;
-  transform-origin: center center;
+  transform-origin: left center;
   animation: brandStretch 7s ease-in-out infinite;
 }
 .brand .loco { display: inline-block; color: var(--orange); }
@@ -422,7 +422,7 @@ body::before {
 
   <!-- TOPBAR: Save/Restore buttons removed (change #1) -->
   <div class="unit" id="topbar">
-    <div style="overflow:hidden; flex-shrink:0; max-width:160px;">
+    <div style="overflow:hidden; flex-shrink:0; width:160px; height:70px; display:flex; align-items:center;">
       <div class="brand">Go <span class="loco">Loco</span></div>
     </div>
     <button class="sel-btn" id="fs-btn" onclick="toggleFullscreen()" title="Toggle Fullscreen">⛶</button>
