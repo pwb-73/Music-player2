@@ -1,5 +1,5 @@
 <!-- ============================================================ -->
-<!-- INDEX38                                                      -->
+<!-- INDEX39                                                      -->
 <!-- Changes: 1) Removed Save/Restore buttons                     -->
 <!--          2) Removed Library+Extras sidebar sections;         -->
 <!--             Album art moved to RIGHT panel                   -->
@@ -18,7 +18,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="SoundVault">
-<title>SoundVault — Hi-Fi · INDEX38</title>
+<title>SoundVault — Hi-Fi · INDEX39</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;900&display=swap" rel="stylesheet">
 <style>
@@ -80,7 +80,14 @@ body::before {
 .sel-btn.orange { background: linear-gradient(180deg, var(--orange-bright), var(--orange), var(--orange-dark)); border-color: var(--orange-dark); border-bottom-color: #6a2808; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
 .sel-btn.active { background: linear-gradient(180deg, var(--orange), var(--orange-dark)); border-color: var(--orange-dark); color: #fff; text-shadow: 0 1px 1px rgba(0,0,0,0.4); }
 .topbar-btns .sel-btn { font-family: 'DM Sans', sans-serif; font-size: 17px; font-weight: 900; padding: 10px 20px; letter-spacing: 1.5px; }
-#fs-btn { font-size: 22px; padding: 10px 14px; line-height: 1; font-weight: 900; }
+#fs-btn {
+  font-size: 22px; padding: 10px 14px; line-height: 1; font-weight: 900;
+  background: linear-gradient(180deg, var(--orange-bright), var(--orange), var(--orange-dark)) !important;
+  border-color: var(--orange-dark) !important;
+  border-bottom-color: #6a2808 !important;
+  color: #fff !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5) !important;
+}
 
 /* MAIN — now has content + right panel */
 #main { display: flex; flex: 1; gap: 10px; overflow: hidden; min-height: 0; }
@@ -106,7 +113,7 @@ body::before {
 }
 #right-art img { width: 100%; height: 100%; object-fit: contain; border-radius: 6px; }
 
-/* Vertical transport controls */
+/* Vertical transport controls — all buttons identical size */
 #right-controls {
   flex: 1;
   display: flex; flex-direction: column;
@@ -116,7 +123,7 @@ body::before {
   overflow: hidden;
 }
 .ctrl-v {
-  width: 128px; height: 128px;
+  width: 140px; height: 140px;
   background: linear-gradient(180deg, var(--panel-light), var(--panel-dark));
   border: 2px solid var(--tan); border-bottom: 3px solid var(--warm-gray);
   border-radius: 12px;
@@ -127,23 +134,23 @@ body::before {
 }
 .ctrl-v:active { opacity: 0.5; transform: scale(0.95); }
 #play-btn-v {
-  width: 156px; height: 156px; font-size: 80px;
+  width: 140px; height: 140px; font-size: 72px;
   background: linear-gradient(180deg, var(--orange-bright), var(--orange), var(--orange-dark));
   border: 2px solid var(--orange-dark); border-bottom: 3px solid #6a2808;
-  border-radius: 16px; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+  border-radius: 12px; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.4);
   box-shadow: 0 6px 20px rgba(180,80,20,0.5), inset 0 1px 0 rgba(255,255,255,0.3);
   display: flex; align-items: center; justify-content: center;
-  cursor: pointer; font-size: 80px; line-height: 1; transition: opacity 0.08s, transform 0.08s;
+  cursor: pointer; line-height: 1; transition: opacity 0.08s, transform 0.08s;
   user-select: none; -webkit-user-select: none;
 }
 #play-btn-v:active { opacity: 0.7; transform: scale(0.95); }
 #stop-btn-v {
-  width: 100px; height: 100px; font-size: 50px;
+  width: 140px; height: 140px; font-size: 64px;
   background: linear-gradient(180deg, var(--panel-light), var(--panel-dark));
   border: 2px solid var(--tan); border-bottom: 3px solid var(--warm-gray);
-  border-radius: 10px; color: var(--text-dark);
+  border-radius: 12px; color: var(--text-dark);
   display: flex; align-items: center; justify-content: center;
-  cursor: pointer; box-shadow: 0 3px 10px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.4);
+  cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.4);
   transition: opacity 0.08s, transform 0.08s; user-select: none; -webkit-user-select: none;
 }
 #stop-btn-v:active { opacity: 0.5; transform: scale(0.95); }
@@ -352,14 +359,12 @@ body::before {
   .brand { font-size: 36px; }
   #topbar { padding: 5px 16px; gap: 10px; }
   .topbar-btns .sel-btn { font-size: 14px; padding: 7px 13px; }
-  #fs-btn { font-size: 18px; padding: 3px 8px; }
+  #fs-btn { font-size: 18px; padding: 7px 10px; }
   #player-bar { padding: 6px 12px 8px; }
   .player-inner { gap: 5px; }
   .player-title { font-size: 48px; }
   .player-artist { font-size: 14px; }
-  .ctrl-v { width: 96px; height: 96px; font-size: 48px; }
-  #play-btn-v { width: 120px; height: 120px; font-size: 60px; }
-  #stop-btn-v { width: 80px; height: 80px; font-size: 40px; }
+  .ctrl-v, #play-btn-v, #stop-btn-v { width: 100px; height: 100px; font-size: 48px; }
   .vol-slider { width: 200px; }
   .progress-row { gap: 7px; }
   .prog-track { height: 8px; }
@@ -368,9 +373,7 @@ body::before {
 @media (max-height: 700px) {
   .brand { font-size: 28px; }
   #topbar { padding: 4px 12px; }
-  .ctrl-v { width: 72px; height: 72px; font-size: 36px; }
-  #play-btn-v { width: 90px; height: 90px; font-size: 46px; }
-  #stop-btn-v { width: 60px; height: 60px; font-size: 30px; }
+  .ctrl-v, #play-btn-v, #stop-btn-v { width: 72px; height: 72px; font-size: 34px; }
   .player-title { font-size: 36px; }
   .player-artist { font-size: 12px; }
   .vol-slider { width: 150px; }
@@ -605,7 +608,7 @@ body::before {
 <input type="file" id="restore-input" accept=".json" style="display:none" onchange="restoreLibrary(event)">
 
 <script>
-const APP_VERSION = 'INDEX38';
+const APP_VERSION = 'INDEX39';
 document.getElementById('version-label').textContent = APP_VERSION;
 document.title = 'SoundVault — Hi-Fi · ' + APP_VERSION;
 
