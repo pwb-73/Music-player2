@@ -1,5 +1,5 @@
 <!-- ============================================================ -->
-<!-- INDEX39                                                      -->
+<!-- INDEX41                                                      -->
 <!-- Changes: 1) Removed Save/Restore buttons                     -->
 <!--          2) Removed Library+Extras sidebar sections;         -->
 <!--             Album art moved to RIGHT panel                   -->
@@ -18,7 +18,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="SoundVault">
-<title>SoundVault — Hi-Fi · INDEX39</title>
+<title>SoundVault — Hi-Fi · INDEX41</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;900&display=swap" rel="stylesheet">
 <style>
@@ -48,15 +48,31 @@ body::before {
 .unit::before { top: 6px; left: 8px; } .unit::after { top: 6px; right: 8px; }
 
 /* TOPBAR */
-#topbar { padding: 8px 24px; display: flex; align-items: center; gap: 16px; flex-shrink: 0; }
+#topbar { padding: 8px 24px; display: flex; align-items: center; gap: 16px; flex-shrink: 0; overflow: hidden; }
 .brand {
   font-family: 'DM Sans', sans-serif; font-size: 52px; font-weight: 900;
   letter-spacing: -1px; color: var(--text-dark);
-  text-shadow: 0 2px 0 rgba(255,255,255,0.4), 0 2px 6px rgba(0,0,0,0.25);
-  flex-shrink: 0; transform: rotate(-4deg); display: inline-block;
+  flex-shrink: 0; display: inline-block;
   line-height: 0.9; padding: 2px 4px;
+  transform-origin: center center;
+  animation: brandStretch 7s ease-in-out infinite;
 }
-.brand span { color: var(--orange); }
+.brand .loco { display: inline-block; color: var(--orange); }
+
+@keyframes brandStretch {
+  0%   { transform: rotate(-4deg) scaleX(1);   text-shadow: -3px 0 2px rgba(255,0,0,0.6), 3px 0 2px rgba(0,210,255,0.6); filter: brightness(1); }
+  50%  { transform: rotate(-4deg) scaleX(1.6); text-shadow: -20px 0 6px rgba(255,0,0,0.95), 20px 0 6px rgba(0,210,255,0.95); filter: brightness(1.25) contrast(1.15); }
+  100% { transform: rotate(-4deg) scaleX(1);   text-shadow: -3px 0 2px rgba(255,0,0,0.6), 3px 0 2px rgba(0,210,255,0.6); filter: brightness(1); }
+}
+
+/* When playing, layer a subtle groove pulse on top */
+.brand.playing {
+  animation: brandStretch 7s ease-in-out infinite, brandPlayPulse 0.8s ease-in-out infinite;
+}
+@keyframes brandPlayPulse {
+  0%,100% { filter: brightness(1); }
+  50%     { filter: brightness(1.3) contrast(1.1); }
+}
 .vu-meter { display: flex; flex-direction: column; gap: 3px; padding: 6px 12px; background: #1a1008; border-radius: 4px; border: 1px solid #0a0804; box-shadow: inset 0 2px 6px rgba(0,0,0,0.8); flex-shrink: 0; }
 .vu-row { display: flex; gap: 2px; align-items: center; }
 .vu-label { font-family: 'Share Tech Mono', monospace; font-size: 8px; color: #5a4a30; width: 8px; }
@@ -406,7 +422,7 @@ body::before {
 
   <!-- TOPBAR: Save/Restore buttons removed (change #1) -->
   <div class="unit" id="topbar">
-    <div class="brand">Go <span>Loco</span></div>
+    <div class="brand">Go <span class="loco">Loco</span></div>
     <button class="sel-btn" id="fs-btn" onclick="toggleFullscreen()" title="Toggle Fullscreen">⛶</button>
     <div class="vu-meter">
       <div class="vu-row"><span class="vu-label">L</span><div class="vu-bars" id="vu-l"></div></div>
@@ -608,7 +624,7 @@ body::before {
 <input type="file" id="restore-input" accept=".json" style="display:none" onchange="restoreLibrary(event)">
 
 <script>
-const APP_VERSION = 'INDEX39';
+const APP_VERSION = 'INDEX41';
 document.getElementById('version-label').textContent = APP_VERSION;
 document.title = 'SoundVault — Hi-Fi · ' + APP_VERSION;
 
@@ -1113,6 +1129,8 @@ audio.addEventListener('timeupdate',()=>{
 function updatePlayBtn(){
   document.getElementById('play-btn-v').textContent=isPlaying?'⏸':'▶';
   const npb=document.getElementById('np-play-btn');if(npb)npb.textContent=isPlaying?'⏸':'▶';
+  // Animate logo when playing
+  document.querySelector('.brand').classList.toggle('playing', isPlaying);
 }
 
 // Swipe-down to close NP overlay
