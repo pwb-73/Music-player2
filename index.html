@@ -1,5 +1,5 @@
 <!-- ============================================================ -->
-<!-- GoLoco · INDEX43                                             -->
+<!-- GoLoco · INDEX44                                             -->
 <!-- ============================================================ -->
 <!DOCTYPE html>
 <html lang="en">
@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="GoLoco">
-<title>GoLoco · INDEX43</title>
+<title>GoLoco · INDEX44</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;900&display=swap" rel="stylesheet">
 <style>
@@ -387,16 +387,7 @@ body::before {
 }
 
 /* MODALS / NOTIF */
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(6px); z-index: 100; display: none; align-items: center; justify-content: center; padding: 20px; }
-.modal-overlay.open { display: flex; }
-.modal { background: linear-gradient(180deg,var(--panel-light),var(--panel)); border: 1px solid var(--tan); border-radius: 8px; padding: 24px; max-width: 380px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.7); }
-.modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 2px; margin-bottom: 16px; color: var(--text-dark); }
-.modal-opt { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 4px; background: rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.1); cursor: pointer; margin-bottom: 8px; transition: all 0.12s; }
-.modal-opt:hover { border-color: var(--orange); }
-.modal-opt-icon { font-size: 24px; width: 44px; height: 44px; background: #1a1008; border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.modal-opt strong { font-size: 14px; display: block; color: var(--text-dark); margin-bottom: 2px; }
-.modal-opt span { font-size: 11px; color: var(--text-light); font-family: 'Share Tech Mono', monospace; }
-.modal-cancel { width: 100%; margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.08); border: 1px solid rgba(0,0,0,0.12); border-radius: 4px; font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text-mid); cursor: pointer; text-transform: uppercase; }
+
 .notif { position: fixed; top: 16px; right: 16px; background: #1a1008; border: 1px solid var(--orange); border-radius: 4px; padding: 10px 16px; font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--cream); z-index: 200; transform: translateX(120%); transition: transform 0.3s ease; box-shadow: 0 4px 16px rgba(0,0,0,0.5); }
 .notif.show { transform: translateX(0); }
 
@@ -426,7 +417,7 @@ body::before {
       <input type="text" id="search-bar" placeholder="SEARCH LIBRARY..." oninput="onSearch(this.value)">
     </div>
     <div class="topbar-btns">
-      <button class="sel-btn orange" onclick="openImportModal()">+ IMPORT</button>
+      <button class="sel-btn orange" onclick="triggerFileImport()">+ IMPORT</button>
     </div>
   </div>
 
@@ -588,28 +579,7 @@ body::before {
   </div>
 </div>
 
-<div class="modal-overlay" id="import-modal">
-  <div class="modal">
-    <div class="modal-title">Import Music</div>
-    <div class="modal-opt" onclick="closeModal();setTimeout(triggerFileImport,80)">
-      <div class="modal-opt-icon">🎵</div>
-      <div><strong>Select Audio Files</strong><span>TAP TO PICK MP3 / WAV FILES FROM YOUR DEVICE</span></div>
-    </div>
-    <div class="modal-opt" style="cursor:default;opacity:0.6;">
-      <div class="modal-opt-icon">📂</div>
-      <div><strong>Whole Folder</strong><span>NOT SUPPORTED IN IOS SAFARI — SELECT FILES INDIVIDUALLY OR USE THE FILES APP TO SHARE MULTIPLE FILES AT ONCE</span></div>
-    </div>
-    <div class="modal-opt" onclick="importDropbox()">
-      <div class="modal-opt-icon">📦</div>
-      <div><strong>Dropbox</strong><span>MUSICBEE LIBRARY BACKUP</span></div>
-    </div>
-    <div class="modal-opt" onclick="importGDrive()">
-      <div class="modal-opt-icon">🗂️</div>
-      <div><strong>Google Drive</strong><span>MUSICBEE LIBRARY BACKUP</span></div>
-    </div>
-    <button class="modal-cancel" onclick="closeModal()">Cancel</button>
-  </div>
-</div>
+
 
 <div class="notif" id="notif"></div>
 <input type="file" id="file-input" multiple style="display:none" onchange="handleFiles(event)">
@@ -617,7 +587,7 @@ body::before {
 <input type="file" id="restore-input" accept=".json" style="display:none" onchange="restoreLibrary(event)">
 
 <script>
-const APP_VERSION = 'INDEX43';
+const APP_VERSION = 'INDEX44';
 document.getElementById('version-label').textContent = APP_VERSION;
 document.title = 'GoLoco · ' + APP_VERSION;
 
@@ -935,10 +905,6 @@ function addTag(){const v=document.getElementById('tag-input').value.trim();if(!
 function delTag(tag,e){e.stopPropagation();tags=tags.filter(t=>t!==tag);if(activeTag===tag)activeTag=null;save();renderTags();}
 function selectTag(tag){activeTag=activeTag===tag?null:tag;renderTags();}
 function clearQueue(){queue=[];renderQueue();}
-
-// MODAL
-function openImportModal(){document.getElementById('import-modal').classList.add('open');}
-function closeModal(){document.getElementById('import-modal').classList.remove('open');}
 
 // NOTIF
 let nTimer;
