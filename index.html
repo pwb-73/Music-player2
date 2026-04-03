@@ -757,8 +757,6 @@ function processFileList(files){
     tmp.addEventListener('loadedmetadata',()=>{clearTimeout(tmo);t.duration=tmp.duration;done();},{once:true});
     tmp.addEventListener('error',()=>{clearTimeout(tmo);done();},{once:true});
     tmp.src=url;
-    // Queue online art lookup after a short delay so ID3 parse can finish first
-    setTimeout(()=>queueArtLookup(t), 1200);
   });
 }
 
@@ -1105,8 +1103,6 @@ function applyArt(t) {
     setArtEl(document.getElementById('player-art'), t.art);
     updateNowPlayingOverlay();
   }
-  // Refresh the track row (for any future art column we might add)
-  renderView();
 }
 
 // ── MusicBrainz → Cover Art Archive ──────────────────────────────────────────
