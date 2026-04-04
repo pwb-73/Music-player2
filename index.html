@@ -1,5 +1,5 @@
 <!-- ============================================================ -->
-<!-- GoLoco · INDEX 60                                            -->
+<!-- GoLoco · INDEX 61                                            -->
 <!-- ============================================================ -->
 <!DOCTYPE html>
 <html lang="en">
@@ -124,8 +124,8 @@ body::before {
 #right-controls {
   flex: 1;
   display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  gap: 14px;
+  align-items: center; justify-content: stretch;
+  gap: 0;
   padding: 14px 10px 20px;
   overflow: hidden;
   background: transparent !important;
@@ -134,42 +134,43 @@ body::before {
 }
 #right-controls::before, #right-controls::after { display: none; }
 .ctrl-v {
-  width: 140px; height: 140px;
+  flex: 1; width: 100%;
   background: transparent;
-  border: none;
-  color: var(--text-dark); font-size: 64px; line-height: 1;
+  border: none; box-shadow: none;
+  color: var(--text-dark); font-size: clamp(40px, 8vh, 80px); line-height: 1;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer;
   transition: opacity 0.08s, transform 0.08s; user-select: none; -webkit-user-select: none;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.25));
 }
-.ctrl-v:active { opacity: 0.5; transform: scale(0.95); }
+.ctrl-v:active { opacity: 0.4; transform: scale(0.92); }
 #play-btn-v {
-  width: 140px; height: 140px; font-size: 72px;
+  flex: 1; width: 100%;
   background: transparent;
-  border: none;
-  color: var(--text-light);
+  border: none; box-shadow: none;
+  color: var(--warm-gray); font-size: clamp(48px, 10vh, 96px); line-height: 1;
   display: flex; align-items: center; justify-content: center;
-  cursor: pointer; line-height: 1; transition: color 0.15s, opacity 0.08s, transform 0.08s;
+  cursor: pointer;
+  transition: color 0.15s, opacity 0.08s, transform 0.08s;
   user-select: none; -webkit-user-select: none;
-  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.4));
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.3));
 }
 #play-btn-v.playing {
   color: var(--orange-bright);
-  filter: drop-shadow(0 0 10px rgba(240,112,48,0.7));
+  filter: drop-shadow(0 0 12px rgba(240,112,48,0.8));
 }
-#play-btn-v:active { opacity: 0.7; transform: scale(0.95); }
+#play-btn-v:active { opacity: 0.6; transform: scale(0.92); }
 #stop-btn-v {
-  width: 140px; height: 140px; font-size: 64px;
+  flex: 1; width: 100%;
   background: transparent;
-  border: none;
-  color: var(--text-dark);
+  border: none; box-shadow: none;
+  color: var(--text-dark); font-size: clamp(40px, 8vh, 80px); line-height: 1;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer;
   transition: opacity 0.08s, transform 0.08s; user-select: none; -webkit-user-select: none;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.25));
 }
-#stop-btn-v:active { opacity: 0.5; transform: scale(0.95); }
+#stop-btn-v:active { opacity: 0.4; transform: scale(0.92); }
 
 /* Art searching pulse */
 #right-art.searching { animation: artpulse 1.4s ease-in-out infinite; }
@@ -291,8 +292,8 @@ body::before {
 }
 #np-ui { position: relative; z-index: 2; display: flex; flex-direction: column; height: 100%; padding: env(safe-area-inset-top, 20px) 28px env(safe-area-inset-bottom, 28px); }
 #np-close { align-self: flex-end; background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.2); border-radius: 20px; padding: 7px 18px; font-family: 'Share Tech Mono', monospace; font-size: 12px; letter-spacing: 1.5px; color: rgba(255,255,255,0.85); cursor: pointer; margin-top: 8px; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
-#np-spacer { flex: 1; max-height: 50%; }
-#np-title { font-size: 30px; font-weight: 800; color: #fff; letter-spacing: 0.3px; text-shadow: 0 2px 12px rgba(0,0,0,0.8); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom: 6px; }
+#np-spacer { flex: 1; }
+#np-title { font-size: 30px; font-weight: 800; color: #fff; letter-spacing: 0.3px; text-shadow: 0 2px 12px rgba(0,0,0,0.8); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom: 4px; margin-top: 0; }
 #np-artist { font-family: 'Share Tech Mono', monospace; font-size: 14px; color: rgba(255,255,255,0.7); text-shadow: 0 1px 6px rgba(0,0,0,0.8); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom: 4px; }
 .np-prog-row { display: flex; align-items: center; gap: 12px; margin-bottom: 0; width: 33%; }
 .np-prog-track { flex: 1; height: 4px; background: rgba(255,255,255,0.25); border-radius: 2px; cursor: pointer; overflow: hidden; border: none; }
@@ -380,7 +381,7 @@ body::before {
   .player-inner { gap: 5px; }
   .player-title { font-size: 48px; }
   .player-artist { font-size: 14px; }
-  .ctrl-v, #play-btn-v, #stop-btn-v { width: 100px; height: 100px; font-size: 48px; background: transparent; border: none; box-shadow: none; }
+  /* responsive handled by clamp */
   .vol-slider { width: 200px; }
   .progress-row { gap: 7px; }
   .prog-track { height: 8px; }
@@ -389,7 +390,7 @@ body::before {
 @media (max-height: 700px) {
   .brand { font-size: 28px; }
   #topbar { padding: 4px 12px; }
-  .ctrl-v, #play-btn-v, #stop-btn-v { width: 72px; height: 72px; font-size: 34px; background: transparent; border: none; box-shadow: none; }
+  /* responsive handled by clamp */
   .player-title { font-size: 36px; }
   .player-artist { font-size: 12px; }
   .vol-slider { width: 150px; }
@@ -484,7 +485,7 @@ body::before {
 </head>
 <body>
 <script>/* *** BUMP_VERSION_HERE *** */
-const APP_VERSION = 'INDEX 60';
+const APP_VERSION = 'INDEX 61';
 </script>
 <div id="app">
 
