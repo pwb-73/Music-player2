@@ -1,5 +1,5 @@
 <!-- ============================================================ -->
-<!-- GoLoco · INDEX 69                                            -->
+<!-- GoLoco · INDEX 70                                            -->
 <!-- ============================================================ -->
 <!DOCTYPE html>
 <html lang="en">
@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="GoLoco">
-<title>GoLoco · INDEX 69</title>
+<title>GoLoco · INDEX 70</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;900&display=swap" rel="stylesheet">
 <style>
@@ -41,7 +41,7 @@ body::before {
 /* TOPBAR */
 #topbar {
   padding: 8px 24px; display: flex; align-items: center; gap: 16px; flex-shrink: 0; overflow: hidden;
-  background: url("topbar_anim.gif") repeat-x center bottom / cover !important;
+  background: url("topbar_anim.gif") repeat-x left bottom / auto 100% !important;
 }
 .brand {
   font-family: 'DM Sans', sans-serif; font-size: 52px; font-weight: 900;
@@ -403,7 +403,7 @@ body::before {
 
 /* README coffee button */
 #readme-btn {
-  height: 53px; width: auto;
+  height: 80px; width: auto;
   cursor: pointer; border-radius: 6px;
   border: 2px solid var(--orange-dark);
   box-shadow: 0 3px 10px rgba(0,0,0,0.4);
@@ -485,25 +485,12 @@ body::before {
   padding-bottom: 8px;
 }
 
-/* Mini GoLoco brand in player bar */
-#mini-brand {
-  font-family: 'DM Sans', sans-serif; font-size: 28px; font-weight: 900;
-  letter-spacing: -0.5px; color: var(--text-dark);
-  flex-shrink: 0; display: inline-block;
-  line-height: 0.9; padding: 1px 3px;
-  transform-origin: left center;
-  animation: brandStretch 7s ease-in-out infinite;
-  cursor: default; user-select: none;
-}
-#mini-brand .loco { display: inline-block; color: var(--orange); }
-#mini-brand.playing {
-  animation: brandStretch 7s ease-in-out infinite, brandPlayPulse 0.8s ease-in-out infinite;
-}
+
 </style>
 </head>
 <body>
 <script>/* *** BUMP_VERSION_HERE *** */
-const APP_VERSION = 'INDEX 69';
+const APP_VERSION = 'INDEX 70';
 </script>
 <div id="app">
 
@@ -644,10 +631,7 @@ const APP_VERSION = 'INDEX 69';
         <!-- [6] Shuffle left of volume, volume 2× bigger -->
         <div class="player-right">
           <div class="shuffle-vol-row">
-            <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
-              <img id="readme-btn" src="coffee-80.gif" alt="README" onclick="openReadme()" title="About GoLoco">
-              <div id="mini-brand">Go <span class="loco">Loco</span></div>
-            </div>
+            <img id="readme-btn" src="coffee-80.gif" alt="README" onclick="openReadme()" title="About GoLoco">
             <button class="sel-btn" id="shuffle-btn" onclick="toggleShuffle()">⇀ SHUFFLE</button>
             <div class="volume-group">
               <span class="vol-label">VOL</span>
@@ -1281,7 +1265,7 @@ function updatePlayBtn(){
   const npb=document.getElementById('np-play-btn');if(npb)npb.textContent=isPlaying?'⏸':'▶';
   // Animate logo when playing
   document.querySelector('.brand').classList.toggle('playing', isPlaying);
-  const mb=document.getElementById('mini-brand');if(mb)mb.classList.toggle('playing',isPlaying);
+
 }
 
 // Swipe-down to close NP overlay
