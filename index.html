@@ -39,7 +39,7 @@ body::before {
 .unit::before { top: 6px; left: 8px; } .unit::after { top: 6px; right: 8px; }
 
 /* TOPBAR */
-/* TOPBAR — GIF is a real <img> behind all controls */
+/* TOPBAR — canvas scrolls the road behind controls */
 #topbar {
   padding: 0; display: flex; align-items: center; flex-shrink: 0;
   position: relative; overflow: hidden;
@@ -48,8 +48,8 @@ body::before {
   box-shadow: 0 4px 12px rgba(0,0,0,0.6) !important;
   height: 90px;
 }
-#topbar-gif {
-  position: absolute; top: 0; left: 0; height: 100%; width: auto;
+#topbar-canvas {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
   display: block; pointer-events: none; z-index: 0;
 }
 #topbar-controls {
@@ -510,8 +510,7 @@ const APP_VERSION = 'INDEX 70';
 
   <!-- TOPBAR: Save/Restore buttons removed (change #1) -->
   <div id="topbar">
-    <!-- Animated GIF sits behind everything as a real img -->
-    <img id="topbar-gif" src="topbar_anim.gif" alt="">
+    <canvas id="topbar-canvas"></canvas>
     <!-- All controls float on top -->
     <div id="topbar-controls">
       <div style="overflow:hidden; flex-shrink:0; width:160px; height:70px; display:flex; align-items:center;">
@@ -1363,6 +1362,48 @@ document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(
 
 document.getElementById('app').addEventListener('touchmove',function(e){let el=e.target;while(el&&el!==document.body){if(el.scrollHeight>el.clientHeight||el.scrollWidth>el.clientWidth){return;}el=el.parentElement;}e.preventDefault();},{passive:false});
 document.body.addEventListener('touchmove',function(e){if(e.target===document.body)e.preventDefault();},{passive:false});
+</script>
+
+<script>
+// Topbar road scroll — draws GIF frames onto canvas, reliable on Safari/iOS
+(function(){
+  var canvas = document.getElementById('topbar-canvas');
+  var ctx = canvas.getContext('2d');
+  var img = new Image();
+  var offset = 0;
+  var TILE_W = 626; // seamless loop width in GIF pixels
+  var GIF_H = 90;   // GIF natural height
+  var speed = 1.5;  // pixels per frame to scroll
+
+  function resize(){
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+  }
+
+  function draw(){
+    if(!img.complete) return;
+    var cw = canvas.width, ch = canvas.height;
+    // Scale factor: fit GIF height to canvas height
+    var scale = ch / GIF_H;
+    var tileW = TILE_W * scale;
+    // Advance offset
+    offset = (offset + speed) % tileW;
+    ctx.clearRect(0, 0, cw, ch);
+    // Draw enough tiles to fill canvas width
+    var x = -offset;
+    while(x < cw){
+      ctx.drawImage(img, x, 0, tileW, ch);
+      x += tileW;
+    }
+  }
+
+  img.onload = function(){
+    resize();
+    setInterval(draw, 30); // ~33fps
+  };
+  img.src = 'topbar_anim.gif';
+  window.addEventListener('resize', resize);
+})();
 </script>
 </body>
 </html>
