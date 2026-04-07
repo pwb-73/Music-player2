@@ -1,5 +1,5 @@
 <!-- ============================================================ -->
-<!-- GoLoco · INDEX 71                                            -->
+<!-- GoLoco · INDEX 72                                            -->
 <!-- ============================================================ -->
 <!DOCTYPE html>
 <html lang="en">
@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="GoLoco">
-<title>GoLoco · INDEX 71</title>
+<title>GoLoco · INDEX 72</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;900&display=swap" rel="stylesheet">
 <style>
@@ -1365,30 +1365,27 @@ document.body.addEventListener('touchmove',function(e){if(e.target===document.bo
 </script>
 
 <script>
-// Topbar — scrolling road background + stationary bouncing motorcycle
-// INDEX 71: bike stays fixed horizontally, bobs vertically to simulate riding
+// Topbar — scrolling road (mirror-tiled, no visible seam) + stationary bouncing bike
+// INDEX 72: mirror every other tile so the join blends invisibly
 (function(){
   var canvas = document.getElementById('topbar-canvas');
   var ctx = canvas.getContext('2d');
 
   var road = new Image();
   var bike = new Image();
-
   var roadLoaded = false;
   var bikeLoaded = false;
 
-  // Road scroll state
   var roadOffset = 0;
   var ROAD_NATURAL_W = 1900;
   var ROAD_NATURAL_H = 545;
   var roadSpeed = 3.5;
 
-  // Bike bounce state
   var bounceT = 0;
   var BOUNCE_FREQ = 0.09;
   var BOUNCE_AMP = 2.5;
 
-  // Cached layout — computed once on resize, never per frame
+  // Layout — computed once on resize
   var cw = 0, ch = 0, tileW = 0;
   var bikeW = 0, bikeH = 0, bikeX = 0, bikeCenterY = 0;
 
@@ -1400,23 +1397,46 @@ document.body.addEventListener('touchmove',function(e){if(e.target===document.bo
     tileW = ROAD_NATURAL_W * (ch / ROAD_NATURAL_H);
     bikeH = ch * 0.90;
     bikeW = (728 / 576) * bikeH;
-    bikeX = Math.round(cw * 0.08);  // fixed pixel — never changes between frames
+    // Nudged left vs index71 — sit closer to left edge
+    bikeX = Math.round(bikeW * 0.05);
     bikeCenterY = (ch - bikeH) / 2;
+  }
+
+  // Draw one road tile. If mirrored=true, flip horizontally around its centre.
+  function drawTile(x, mirrored){
+    if(mirrored){
+      ctx.save();
+      ctx.translate(x + tileW, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(road, 0, 0, tileW, ch);
+      ctx.restore();
+    } else {
+      ctx.drawImage(road, x, 0, tileW, ch);
+    }
   }
 
   function draw(){
     if(!roadLoaded || !bikeLoaded || cw === 0) return;
 
-    // --- Road ---
-    roadOffset = (roadOffset + roadSpeed) % tileW;
+    // Advance offset over a double-tile period (normal + mirror = seamless loop)
+    var doubleTile = tileW * 2;
+    roadOffset = (roadOffset + roadSpeed) % doubleTile;
+
     ctx.clearRect(0, 0, cw, ch);
-    var x = -roadOffset;
+
+    // Find the starting tile index and position
+    var startTileIndex = Math.floor(roadOffset / tileW);
+    var startX = -(roadOffset % tileW);
+    var tileIndex = startTileIndex;
+    var x = startX;
+
     while(x < cw){
-      ctx.drawImage(road, x, 0, tileW, ch);
+      drawTile(x, tileIndex % 2 === 1); // odd tiles are mirrored
       x += tileW;
+      tileIndex++;
     }
 
-    // --- Bike — X is fixed, only Y varies with bounce ---
+    // Bike — fixed X, only Y bounces
     bounceT += BOUNCE_FREQ;
     var bobY = Math.sin(bounceT) * BOUNCE_AMP + Math.sin(bounceT * 2.3) * 0.8;
     ctx.drawImage(bike, bikeX, bikeCenterY + bobY, bikeW, bikeH);
@@ -1430,11 +1450,7 @@ document.body.addEventListener('touchmove',function(e){if(e.target===document.bo
 
   window.addEventListener('resize', resize);
 
-  // Use requestAnimationFrame for smooth rendering
-  function loop(){
-    draw();
-    requestAnimationFrame(loop);
-  }
+  function loop(){ draw(); requestAnimationFrame(loop); }
   requestAnimationFrame(loop);
 })();
 </script>
