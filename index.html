@@ -1,5 +1,5 @@
 <!-- ============================================================ -->
-<!-- GoLoco · INDEX 73                                            -->
+<!-- GoLoco · INDEX 74                                            -->
 <!-- ============================================================ -->
 <!DOCTYPE html>
 <html lang="en">
@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="GoLoco">
-<title>GoLoco · INDEX 73</title>
+<title>GoLoco · INDEX 74</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;900&display=swap" rel="stylesheet">
 <style>
@@ -55,14 +55,15 @@ body::before {
 #topbar-controls {
   position: relative; z-index: 1;
   display: flex; align-items: center; gap: 16px;
-  padding: 8px 24px; width: 100%;
+  padding: 8px 16px 8px 140px; /* left padding clears the bike */
+  width: 100%;
 }
 .brand {
-  font-family: 'DM Sans', sans-serif; font-size: 52px; font-weight: 900;
+  font-family: 'DM Sans', sans-serif; font-size: 32px; font-weight: 900;
   letter-spacing: -1px; color: var(--text-dark);
   flex-shrink: 0; display: inline-block;
   line-height: 0.9; padding: 2px 4px;
-  transform-origin: left center;
+  transform-origin: right center;
   animation: brandStretch 7s ease-in-out infinite;
 }
 .brand .loco { display: inline-block; color: var(--orange); }
@@ -1363,7 +1364,7 @@ document.body.addEventListener('touchmove',function(e){if(e.target===document.bo
 
 <script>
 // Topbar — scrolling road (mirror-tiled, no visible seam) + stationary bouncing bike
-// INDEX 72: mirror every other tile so the join blends invisibly
+// INDEX 74: controls pushed right to clear bike; brand smaller on right
 (function(){
   var canvas = document.getElementById('topbar-canvas');
   var ctx = canvas.getContext('2d');
@@ -1394,8 +1395,8 @@ document.body.addEventListener('touchmove',function(e){if(e.target===document.bo
     tileW = ROAD_NATURAL_W * (ch / ROAD_NATURAL_H);
     bikeH = ch * 0.90;
     bikeW = (728 / 576) * bikeH;
-    // Nudged left vs index71 — sit closer to left edge
-    bikeX = Math.round(bikeW * 0.05);
+    // Nudged left — sit flush at left edge with tiny margin
+    bikeX = Math.round(bikeW * 0.02);
     bikeCenterY = (ch - bikeH) / 2;
   }
 
