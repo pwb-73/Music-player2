@@ -1,5 +1,5 @@
 <!-- ============================================================ -->
-<!-- GoLoco · INDEX 72                                            -->
+<!-- GoLoco · INDEX 73                                            -->
 <!-- ============================================================ -->
 <!DOCTYPE html>
 <html lang="en">
@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="GoLoco">
-<title>GoLoco · INDEX 72</title>
+<title>GoLoco · INDEX 73</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;900&display=swap" rel="stylesheet">
 <style>
@@ -513,9 +513,6 @@ const APP_VERSION = 'INDEX 70';
     <canvas id="topbar-canvas"></canvas>
     <!-- All controls float on top -->
     <div id="topbar-controls">
-      <div style="overflow:hidden; flex-shrink:0; width:160px; height:70px; display:flex; align-items:center;">
-        <div class="brand">Go <span class="loco">Loco</span></div>
-      </div>
       <button class="sel-btn" id="fs-btn" onclick="toggleFullscreen()" title="Toggle Fullscreen">⛶</button>
       <div class="vu-meter">
         <div class="vu-row"><span class="vu-label">L</span><div class="vu-bars" id="vu-l"></div></div>
@@ -525,8 +522,8 @@ const APP_VERSION = 'INDEX 70';
         <span class="search-icon">⌕</span>
         <input type="text" id="search-bar" placeholder="SEARCH LIBRARY..." oninput="onSearch(this.value)">
       </div>
-      <div class="topbar-btns">
-        <button class="sel-btn orange" onclick="triggerFileImport()">+ IMPORT</button>
+      <div style="flex-shrink:0; display:flex; align-items:center; padding-right:8px;">
+        <div class="brand" onclick="triggerFileImport()" title="Tap to import music" style="cursor:pointer;">Go <span class="loco">Loco</span></div>
       </div>
     </div>
   </div>
