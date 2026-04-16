@@ -1,5 +1,5 @@
 <!-- ============================================================ -->
-<!-- GoLoco · INDEX 83                                            -->
+<!-- GoLoco · INDEX 84                                            -->
 <!-- ============================================================ -->
 <!DOCTYPE html>
 <html lang="en">
@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="GoLoco">
-<title>GoLoco · INDEX 83</title>
+<title>GoLoco · INDEX 84</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;900&display=swap" rel="stylesheet">
 <style>
@@ -537,7 +537,7 @@ body::before {
 </head>
 <body>
 <script>/* *** BUMP_VERSION_HERE *** */
-const APP_VERSION = 'INDEX 83';
+const APP_VERSION = 'INDEX 84';
 </script>
 <div id="app">
 
@@ -1304,15 +1304,19 @@ function playGroup(type,name){const key=type==='albums'?'album':type==='artists'
 function togglePlay(){if(!audio.src&&library.length){playTrack(0);return;}if(isPlaying){audio.pause();isPlaying=false;clearTimeout(vuAnimFrame);resetVU();}else{audio.play();isPlaying=true;animateVU();}updatePlayBtn();}
 
 let fadeInterval=null;
+let fadeStartVol=1;
+function clearFade(){
+  if(fadeInterval){clearInterval(fadeInterval);fadeInterval=null;audio.volume=fadeStartVol;document.getElementById('stop-btn-v').style.opacity='1';}
+}
 function stopTrack(){
   if(!audio.src||audio.paused){audio.currentTime=0;isPlaying=false;clearTimeout(vuAnimFrame);resetVU();updatePlayBtn();document.getElementById('prog-fill').style.width='0%';document.getElementById('t-cur').textContent='0:00';return;}
-  clearInterval(fadeInterval);const startVol=audio.volume;const steps=60;let step=0;
+  clearFade();fadeStartVol=audio.volume;const steps=60;let step=0;
   showNotif('FADING OUT...');document.getElementById('stop-btn-v').style.opacity='0.4';
   fadeInterval=setInterval(()=>{
-    step++;const pct=step/steps;audio.volume=Math.max(0,startVol*(1-pct));
+    step++;const pct=step/steps;audio.volume=Math.max(0,fadeStartVol*(1-pct));
     if(step%3===0)updateVURow('vu-l',(1-pct)*0.6*Math.random());
     if(step%3===1)updateVURow('vu-r',(1-pct)*0.6*Math.random());
-    if(step>=steps){clearInterval(fadeInterval);audio.pause();audio.currentTime=0;audio.volume=startVol;isPlaying=false;clearTimeout(vuAnimFrame);resetVU();updatePlayBtn();document.getElementById('prog-fill').style.width='0%';document.getElementById('t-cur').textContent='0:00';document.getElementById('stop-btn-v').style.opacity='1';showNotif('STOPPED');}
+    if(step>=steps){clearInterval(fadeInterval);fadeInterval=null;audio.pause();audio.currentTime=0;audio.volume=fadeStartVol;isPlaying=false;clearTimeout(vuAnimFrame);resetVU();updatePlayBtn();document.getElementById('prog-fill').style.width='0%';document.getElementById('t-cur').textContent='0:00';document.getElementById('stop-btn-v').style.opacity='1';showNotif('STOPPED');}
   },50);
 }
 
@@ -1657,6 +1661,7 @@ function updatePlayBtn(){
 
 function playTrack(idx){
   if(idx<0||idx>=library.length)return;
+  clearFade();
   currentIndex=idx; const t=library[idx];
   playedThisSession.add(idx);
   audio.src=t.url;
@@ -1696,7 +1701,7 @@ document.body.addEventListener('touchmove',function(e){if(e.target===document.bo
 
 <script>
 // Topbar — scrolling road (mirror-tiled) + stationary bouncing bike
-// INDEX 83: spacer div sized by JS so controls always clear the bike
+// INDEX 84: spacer div sized by JS so controls always clear the bike
 (function(){
   var canvas = document.getElementById('topbar-canvas');
   var ctx = canvas.getContext('2d');
