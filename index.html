@@ -1,5 +1,5 @@
 <!-- ============================================================ -->
-<!-- GoLoco · INDEX 80                                            -->
+<!-- GoLoco · INDEX 82                                            -->
 <!-- ============================================================ -->
 <!DOCTYPE html>
 <html lang="en">
@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="GoLoco">
-<title>GoLoco · INDEX 81</title>
+<title>GoLoco · INDEX 82</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;900&display=swap" rel="stylesheet">
 <style>
@@ -537,7 +537,7 @@ body::before {
 </head>
 <body>
 <script>/* *** BUMP_VERSION_HERE *** */
-const APP_VERSION = 'INDEX 81';
+const APP_VERSION = 'INDEX 82';
 </script>
 <div id="app">
 
@@ -858,16 +858,20 @@ function drawVUMeter(canvasId, ch) {
 
   // Hi-DPI scaling for crisp text on retina
   const DPR = Math.min(window.devicePixelRatio || 1, 2);
+  // Logical size always comes from the HTML attributes (CSS px)
   const CW = parseInt(canvas.getAttribute('width')), CH = parseInt(canvas.getAttribute('height'));
+  // Pin the CSS display size so it never changes
+  canvas.style.width  = CW + 'px';
+  canvas.style.height = CH + 'px';
+  // Only resize the backing store when DPR changes
   if (canvas._dprSet !== DPR) {
-    canvas.style.width  = CW + 'px';
-    canvas.style.height = CH + 'px';
-    canvas.width  = CW * DPR;
-    canvas.height = CH * DPR;
+    canvas.width  = Math.round(CW * DPR);
+    canvas.height = Math.round(CH * DPR);
     canvas._dprSet = DPR;
   }
   const ctx = canvas.getContext('2d');
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  // All drawing uses logical (CSS) pixel coordinates
   const w = CW, h = CH;
 
   ctx.clearRect(0, 0, w, h);
@@ -1687,7 +1691,7 @@ document.body.addEventListener('touchmove',function(e){if(e.target===document.bo
 
 <script>
 // Topbar — scrolling road (mirror-tiled) + stationary bouncing bike
-// INDEX 80: spacer div sized by JS so controls always clear the bike
+// INDEX 82: spacer div sized by JS so controls always clear the bike
 (function(){
   var canvas = document.getElementById('topbar-canvas');
   var ctx = canvas.getContext('2d');
