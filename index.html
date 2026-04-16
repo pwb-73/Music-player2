@@ -1,5 +1,5 @@
 <!-- ============================================================ -->
-<!-- GoLoco · INDEX 79                                            -->
+<!-- GoLoco · INDEX 80                                            -->
 <!-- ============================================================ -->
 <!DOCTYPE html>
 <html lang="en">
@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="GoLoco">
-<title>GoLoco · INDEX 79</title>
+<title>GoLoco · INDEX 80</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;900&display=swap" rel="stylesheet">
 <style>
@@ -536,7 +536,7 @@ body::before {
 </head>
 <body>
 <script>/* *** BUMP_VERSION_HERE *** */
-const APP_VERSION = 'INDEX 79';
+const APP_VERSION = 'INDEX 80';
 </script>
 <div id="app">
 
@@ -549,8 +549,8 @@ const APP_VERSION = 'INDEX 79';
       <button class="sel-btn" id="fs-btn" onclick="toggleFullscreen()" title="Toggle Fullscreen">⛶</button>
       <div id="vu-analog-wrap">
         <div class="vu-analog-meters">
-          <canvas class="vu-analog-canvas" id="vu-canvas-l" width="110" height="36"></canvas>
-          <canvas class="vu-analog-canvas" id="vu-canvas-r" width="110" height="36"></canvas>
+          <canvas class="vu-analog-canvas" id="vu-canvas-l" width="160" height="80"></canvas>
+          <canvas class="vu-analog-canvas" id="vu-canvas-r" width="160" height="80"></canvas>
         </div>
         <div id="balance-row">
           <input type="range" id="balance-slider" min="-1" max="1" step="0.01" value="0" oninput="setBalance(this.value)">
@@ -854,158 +854,165 @@ function getRealLevel(analyser, fftBuf) {
 function drawVUMeter(canvasId, ch) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
+
+  // Hi-DPI scaling for crisp text on retina
+  const DPR = Math.min(window.devicePixelRatio || 1, 2);
+  const CW = parseInt(canvas.getAttribute('width')), CH = parseInt(canvas.getAttribute('height'));
+  if (canvas._dprSet !== DPR) {
+    canvas.style.width  = CW + 'px';
+    canvas.style.height = CH + 'px';
+    canvas.width  = CW * DPR;
+    canvas.height = CH * DPR;
+    canvas._dprSet = DPR;
+  }
   const ctx = canvas.getContext('2d');
-  const W = canvas.width, H = canvas.height;
-  ctx.clearRect(0, 0, W, H);
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  const w = CW, h = CH;
 
-  // ── Layout ──────────────────────────────────────────────────────────────
-  // Header strip (black panel above arc with "dB")
-  const HEADER = Math.round(H * 0.22);
-  // Footer strip (black panel below arc with "VU")
-  const FOOTER = Math.round(H * 0.18);
-  const FACE_H = H - HEADER - FOOTER;  // arc drawing zone height
+  ctx.clearRect(0, 0, w, h);
 
-  // Full background
+  // Background
   ctx.fillStyle = '#0a0806';
-  ctx.beginPath(); ctx.roundRect(0, 0, W, H, 4); ctx.fill();
+  ctx.beginPath(); ctx.roundRect(0, 0, w, h, 3); ctx.fill();
 
-  // Slightly lighter face panel
-  ctx.fillStyle = '#0f0c08';
-  ctx.fillRect(0, HEADER, W, FACE_H);
-
-  // "dB" label in header — centred, amber
-  ctx.font = `bold ${Math.max(5, Math.round(HEADER * 0.65))}px "Share Tech Mono", monospace`;
-  ctx.fillStyle = '#c89840';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('dB', W / 2, HEADER * 0.52);
-
-  // "VU" label in footer
-  ctx.font = `bold ${Math.max(5, Math.round(FOOTER * 0.65))}px "Share Tech Mono", monospace`;
-  ctx.fillStyle = '#c89840';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('VU', W / 2, H - FOOTER * 0.48);
-
-  // ── Arc geometry ─────────────────────────────────────────────────────────
-  // Pivot is below the face zone so the arc sweeps across the full width
-  // We want the arc to clip neatly into the face zone.
-  // Compute R so arc endpoints land at left/right edges of canvas.
-  const startAngle = Math.PI * 1.18;   // ~-54° from down-vertical = far left
-  const endAngle   = Math.PI * 1.82;   // mirror = far right
+  // Arc geometry — wide sweep filling full canvas width
+  const MARGIN = 3;
+  const startAngle = Math.PI * 1.17;
+  const endAngle   = Math.PI * 1.83;
   const arcSpan    = endAngle - startAngle;
-  const cx = W / 2;
+  const cx = w / 2;
+  const R = (cx - MARGIN) / Math.abs(Math.cos(startAngle));
+  const cy = h + R * 0.10;
 
-  // R chosen so arc tips hit x=2 and x=W-2
-  // cx + R*cos(startAngle) = 2  →  R = (cx-2)/|cos(startAngle)|
-  const R = (cx - 3) / Math.abs(Math.cos(startAngle));
-  // cy = bottom of face zone, adjusted so arc top sits in the face
-  const cy = HEADER + FACE_H + R * 0.06;
+  const state = ch === 'L' ? VU.L : VU.R;
+  const needlePct = Math.max(0, Math.min(1.02, state.needle));
+  const inRed = needlePct > 0.88;
 
-  // Clip drawing to face zone so arc doesn't bleed into header/footer
+  // Large "VU" watermark behind everything
   ctx.save();
-  ctx.beginPath();
-  ctx.rect(0, HEADER, W, FACE_H);
-  ctx.clip();
+  const vuSize = Math.round(h * 0.56);
+  ctx.font = '900 ' + vuSize + 'px "Bebas Neue", "DM Sans", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'bottom';
+  ctx.fillStyle = inRed ? 'rgba(210,40,10,0.20)' : 'rgba(180,140,40,0.11)';
+  ctx.fillText('VU', cx, h - 1);
+  ctx.restore();
 
-  // Dark backing track
+  // Red zone background glow when needle is in red
+  if (inRed) {
+    ctx.save();
+    const redStart = startAngle + arcSpan * 0.88;
+    ctx.beginPath();
+    ctx.arc(cx, cy, R + 6, redStart, endAngle);
+    ctx.arc(cx, cy, R - 16, endAngle, redStart, true);
+    ctx.closePath();
+    const rg = ctx.createRadialGradient(cx, cy, R - 16, cx, cy, R + 6);
+    rg.addColorStop(0, 'rgba(255,50,10,0.0)');
+    rg.addColorStop(0.35, 'rgba(255,50,10,0.38)');
+    rg.addColorStop(1, 'rgba(255,90,20,0.60)');
+    ctx.fillStyle = rg;
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // Arc track base
   ctx.beginPath();
   ctx.arc(cx, cy, R, startAngle, endAngle);
-  ctx.lineWidth = 6; ctx.strokeStyle = '#1a1208'; ctx.stroke();
+  ctx.lineWidth = 7; ctx.strokeStyle = '#181008'; ctx.stroke();
 
   // Green zone 0–70%
   ctx.beginPath();
   ctx.arc(cx, cy, R, startAngle, startAngle + arcSpan * 0.70);
   ctx.lineWidth = 4;
-  const gGrad = ctx.createLinearGradient(0, 0, W, 0);
-  gGrad.addColorStop(0, '#2a6008'); gGrad.addColorStop(1, '#7ac428');
+  const gGrad = ctx.createLinearGradient(MARGIN, 0, w - MARGIN, 0);
+  gGrad.addColorStop(0, '#1e5006'); gGrad.addColorStop(1, '#72c020');
   ctx.strokeStyle = gGrad; ctx.stroke();
 
   // Yellow zone 70–88%
   ctx.beginPath();
   ctx.arc(cx, cy, R, startAngle + arcSpan * 0.70, startAngle + arcSpan * 0.88);
-  ctx.lineWidth = 4; ctx.strokeStyle = '#d4a800'; ctx.stroke();
+  ctx.lineWidth = 4;
+  ctx.strokeStyle = inRed ? '#ffcc00' : '#c8a200'; ctx.stroke();
 
   // Red zone 88–100%
   ctx.beginPath();
   ctx.arc(cx, cy, R, startAngle + arcSpan * 0.88, endAngle);
-  ctx.lineWidth = 4; ctx.strokeStyle = '#cc2808'; ctx.stroke();
+  ctx.lineWidth = 4;
+  if (inRed) { ctx.shadowColor = '#ff3000'; ctx.shadowBlur = 8; ctx.strokeStyle = '#ff3808'; }
+  else { ctx.strokeStyle = '#882010'; }
+  ctx.stroke(); ctx.shadowBlur = 0;
 
-  // ── Tick marks & labels ──────────────────────────────────────────────────
+  // Tick marks and dB labels
   const ticks = [
-    { pct:0.00, label:'-20', major:true },
-    { pct:0.10, label:'-15', major:false },
-    { pct:0.22, label:'-10', major:true },
-    { pct:0.36, label:'-7',  major:false },
-    { pct:0.50, label:'-5',  major:true },
-    { pct:0.63, label:'-3',  major:false },
-    { pct:0.73, label:'-1',  major:false },
-    { pct:0.82, label:'0',   major:true },
-    { pct:0.89, label:'+1',  major:false },
-    { pct:0.94, label:'+2',  major:false },
-    { pct:1.00, label:'+3',  major:true },
+    { pct:0.00, label:'-20', major:true  },
+    { pct:0.14, label:'-10', major:true  },
+    { pct:0.22, label:'-7',  major:false },
+    { pct:0.30, label:'-5',  major:true  },
+    { pct:0.44, label:'-3',  major:true  },
+    { pct:0.60, label:'-1',  major:false },
+    { pct:0.72, label:'0',   major:true  },
+    { pct:0.82, label:'+1',  major:false },
+    { pct:0.88, label:'+2',  major:false },
+    { pct:0.93, label:'+3',  major:true  },
+    { pct:1.00, label:'+5',  major:true  },
   ];
-  const tickFont = Math.max(4, Math.round(FACE_H * 0.16));
-  ticks.forEach(({ pct, label, major }) => {
+  const majorTick = Math.round(h * 0.17);
+  const minorTick = Math.round(h * 0.10);
+  const labelSize = Math.max(7, Math.round(h * 0.118));
+
+  ticks.forEach(function(t) {
+    const pct = t.pct, label = t.label, major = t.major;
     const angle = startAngle + arcSpan * pct;
     const cos = Math.cos(angle), sin = Math.sin(angle);
-    const outerR = R + 1;
-    const innerR = R - (major ? Math.round(FACE_H*0.14) : Math.round(FACE_H*0.09));
+    const innerR = R - (major ? majorTick : minorTick);
     const isRed  = pct >= 0.88;
-    const col    = isRed ? '#dd3010' : pct >= 0.70 ? '#c8a800' : '#7a6030';
+    const col    = isRed ? (inRed ? '#ff5530' : '#993020') : pct >= 0.70 ? '#c8a200' : '#9a8050';
+
     ctx.beginPath();
-    ctx.moveTo(cx + cos*innerR, cy + sin*innerR);
-    ctx.lineTo(cx + cos*outerR, cy + sin*outerR);
-    ctx.lineWidth = major ? 1.4 : 0.9;
+    ctx.moveTo(cx + cos * innerR, cy + sin * innerR);
+    ctx.lineTo(cx + cos * (R + 1), cy + sin * (R + 1));
+    ctx.lineWidth = major ? 1.8 : 1.1;
     ctx.strokeStyle = col; ctx.stroke();
 
-    if (major || pct === 0.82) {
-      const labelR = innerR - Math.round(FACE_H * 0.14);
+    if (major) {
+      const labelR = innerR - labelSize * 0.78;
       ctx.save();
-      ctx.translate(cx + cos*labelR, cy + sin*labelR);
-      ctx.rotate(angle + Math.PI/2);
-      ctx.font = `bold ${tickFont}px "Share Tech Mono", monospace`;
-      ctx.fillStyle = isRed ? '#e84820' : '#8a7040';
+      ctx.translate(cx + cos * labelR, cy + sin * labelR);
+      ctx.rotate(angle + Math.PI / 2);
+      ctx.font = 'bold ' + labelSize + 'px "Share Tech Mono", monospace';
+      ctx.fillStyle = isRed ? (inRed ? '#ff6640' : '#aa4020') : '#a08848';
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillText(label, 0, 0);
       ctx.restore();
     }
   });
 
-  // ── Needle ───────────────────────────────────────────────────────────────
-  const state = ch === 'L' ? VU.L : VU.R;
-  const needlePct = Math.max(0, Math.min(1.02, state.needle));
+  // Needle
   const needleAngle = startAngle + arcSpan * needlePct;
   const ncos = Math.cos(needleAngle), nsin = Math.sin(needleAngle);
-  const needleLen = R - 2;
-  const nBX = cx + ncos*4, nBY = cy + nsin*4;
-  const nTX = cx + ncos*needleLen, nTY = cy + nsin*needleLen;
+  const nBX = cx + ncos * 5, nBY = cy + nsin * 5;
+  const nTX = cx + ncos * (R - 2), nTY = cy + nsin * (R - 2);
 
-  if (needlePct > 0.88) { ctx.shadowColor='#ff4010'; ctx.shadowBlur=6; }
+  // Shadow
   ctx.beginPath();
-  ctx.moveTo(nBX+0.8, nBY+0.8); ctx.lineTo(nTX+0.8, nTY+0.8);
-  ctx.lineWidth=1.2; ctx.strokeStyle='rgba(0,0,0,0.45)'; ctx.stroke();
-  ctx.shadowBlur=0;
+  ctx.moveTo(nBX + 1.2, nBY + 1.2); ctx.lineTo(nTX + 1.2, nTY + 1.2);
+  ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(0,0,0,0.40)';
+  ctx.lineCap = 'round'; ctx.stroke();
+
+  // Needle body — thick bright
+  if (inRed) { ctx.shadowColor = '#ff4010'; ctx.shadowBlur = 10; }
   ctx.beginPath();
   ctx.moveTo(nBX, nBY); ctx.lineTo(nTX, nTY);
-  ctx.lineWidth=1.2; ctx.strokeStyle='#e8e4c8'; ctx.stroke();
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = inRed ? '#ffddcc' : '#f0ece0';
+  ctx.lineCap = 'round'; ctx.stroke();
+  ctx.shadowBlur = 0; ctx.lineCap = 'butt';
 
-  // Pivot
-  ctx.beginPath(); ctx.arc(cx, cy, 2.5, 0, Math.PI*2);
-  const pg = ctx.createRadialGradient(cx-0.5,cy-0.5,0,cx,cy,2.5);
-  pg.addColorStop(0,'#d0c090'); pg.addColorStop(1,'#4a3818');
-  ctx.fillStyle=pg; ctx.fill();
-
-  // Peak dot
-  if (state.peak > 0 && state.peakTimer > 0) {
-    const pa = startAngle + arcSpan * Math.min(1.0, state.peak);
-    ctx.beginPath();
-    ctx.arc(cx+Math.cos(pa)*(R-3), cy+Math.sin(pa)*(R-3), 1.8, 0, Math.PI*2);
-    ctx.fillStyle = state.peak>0.88?'#ff3008':state.peak>0.70?'#ffcc00':'#88dd22';
-    ctx.fill();
-  }
-
-  ctx.restore(); // end clip
+  // Pivot cap
+  ctx.beginPath(); ctx.arc(cx, cy, 4.5, 0, Math.PI * 2);
+  const pg = ctx.createRadialGradient(cx - 1.2, cy - 1.2, 0, cx, cy, 4.5);
+  pg.addColorStop(0, '#d8c898'); pg.addColorStop(1, '#3a2808');
+  ctx.fillStyle = pg; ctx.fill();
 }
 
 function updateVUPhysics() {
@@ -1679,7 +1686,7 @@ document.body.addEventListener('touchmove',function(e){if(e.target===document.bo
 
 <script>
 // Topbar — scrolling road (mirror-tiled) + stationary bouncing bike
-// INDEX 79: spacer div sized by JS so controls always clear the bike
+// INDEX 80: spacer div sized by JS so controls always clear the bike
 (function(){
   var canvas = document.getElementById('topbar-canvas');
   var ctx = canvas.getContext('2d');
