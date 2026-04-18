@@ -1,5 +1,5 @@
 <!-- ============================================================ -->
-<!-- GoLoco · INDEX 94                                            -->
+<!-- GoLoco · INDEX 95                                            -->
 <!-- ============================================================ -->
 <!DOCTYPE html>
 <html lang="en">
@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="GoLoco">
-<title>GoLoco · INDEX 94</title>
+<title>GoLoco · INDEX 95</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;900&display=swap" rel="stylesheet">
 <style>
@@ -98,7 +98,7 @@ body::before {
   box-shadow: inset 0 1px 4px rgba(0,0,0,0.8);
 }
 .vu-led {
-  width: 5px; height: 9px; border-radius: 1px;
+  width: 3px; height: 9px; border-radius: 1px;
   background: #080c14;
   transition: background 0.05s;
 }
@@ -544,7 +544,7 @@ body::before {
 </head>
 <body>
 <script>/* *** BUMP_VERSION_HERE *** */
-const APP_VERSION = 'INDEX 94';
+const APP_VERSION = 'INDEX 95';
 </script>
 <div id="app">
 
@@ -1177,11 +1177,15 @@ function stopTrack(){
       audio.volume=0;
       if(_masterGain && _audioCtx){_masterGain.gain.cancelScheduledValues(_audioCtx.currentTime);_masterGain.gain.value=0;}
       // Extra 150ms drain: lets AudioContext fully silence before the hard pause
-      // This eliminates the audible click/pop at the end of the fade
       setTimeout(()=>{
-        audio.pause();audio.currentTime=0;
-        audio.volume=fadeStartVol;
-        if(_masterGain && _audioCtx) _masterGain.gain.value=fadeStartVol;
+        audio.pause();
+        audio.currentTime=0;
+        // Restore volume after a further delay — doing it immediately causes
+        // a momentary full-volume blast on iOS before pause fully takes effect
+        setTimeout(()=>{
+          audio.volume=fadeStartVol;
+          if(_masterGain && _audioCtx) _masterGain.gain.value=fadeStartVol;
+        }, 200);
         isPlaying=false;clearTimeout(vuAnimFrame);resetVU();updatePlayBtn();
         document.getElementById('prog-fill').style.width='0%';
         document.getElementById('t-cur').textContent='0:00';
@@ -1608,7 +1612,7 @@ document.body.addEventListener('touchmove',function(e){if(e.target===document.bo
 
 <script>
 // Topbar — scrolling road (mirror-tiled) + stationary bouncing bike
-// INDEX 94: spacer div sized by JS so controls always clear the bike
+// INDEX 95: spacer div sized by JS so controls always clear the bike
 (function(){
   var canvas = document.getElementById('topbar-canvas');
   var ctx = canvas.getContext('2d');
