@@ -1,5 +1,5 @@
 <!-- ============================================================ -->
-<!-- GoLoco · INDEX 96                                            -->
+<!-- GoLoco · INDEX 97                                            -->
 <!-- ============================================================ -->
 <!DOCTYPE html>
 <html lang="en">
@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="GoLoco">
-<title>GoLoco · INDEX 96</title>
+<title>GoLoco · INDEX 97</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;900&display=swap" rel="stylesheet">
 <style>
@@ -458,10 +458,10 @@ body::before {
 /* README coffee button */
 #readme-btn {
   height: 80px; width: auto;
-  cursor: pointer; border-radius: 6px;
-  border: 2px solid var(--orange-dark);
-  box-shadow: 0 3px 10px rgba(0,0,0,0.4);
-  transition: transform 0.1s, box-shadow 0.1s;
+  cursor: pointer; border-radius: 0;
+  border: none;
+  box-shadow: none;
+  transition: transform 0.1s, opacity 0.1s;
   flex-shrink: 0; display: block;
 }
 #readme-btn:active { transform: scale(0.95); box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
@@ -544,7 +544,7 @@ body::before {
 </head>
 <body>
 <script>/* *** BUMP_VERSION_HERE *** */
-const APP_VERSION = 'INDEX 96';
+const APP_VERSION = 'INDEX 97';
 </script>
 <div id="app">
 
@@ -1612,7 +1612,7 @@ document.body.addEventListener('touchmove',function(e){if(e.target===document.bo
 
 <script>
 // Topbar — scrolling road (mirror-tiled) + stationary bouncing bike
-// INDEX 96: spacer div sized by JS so controls always clear the bike
+// INDEX 97: spacer div sized by JS so controls always clear the bike
 (function(){
   var canvas = document.getElementById('topbar-canvas');
   var ctx = canvas.getContext('2d');
