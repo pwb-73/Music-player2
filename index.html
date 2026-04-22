@@ -1,5 +1,5 @@
 <!-- ============================================================ -->
-<!-- GoLoco · INDEX 111                                            -->
+<!-- GoLoco · INDEX 112                                            -->
 <!-- ============================================================ -->
 <!DOCTYPE html>
 <html lang="en">
@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="GoLoco">
-<title>GoLoco · INDEX 111</title>
+<title>GoLoco · INDEX 112</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;900&display=swap" rel="stylesheet">
 <style>
@@ -544,7 +544,7 @@ body::before {
 </head>
 <body>
 <script>/* *** BUMP_VERSION_HERE *** */
-const APP_VERSION = 'INDEX 111';
+const APP_VERSION = 'INDEX 112';
 </script>
 <div id="app">
 
@@ -1689,9 +1689,9 @@ function updateNowPlayingOverlay(){
     var sp = npPool[Math.floor(Math.random()*npPool.length)];
     npStreaks.push({
       x: bx + sp.fx*bw, y: by + sp.fy*bh + (Math.random()-0.5)*5,
-      len: 40+Math.random()*90, alpha: 0.75+Math.random()*0.25,
+      len: 80+Math.random()*180, alpha: 0.75+Math.random()*0.25,
       vy: (Math.random()-0.3)*0.8, life: 1.0,
-      decay: 0.030+Math.random()*0.030, speed: 0.8+Math.random()*1.4
+      decay: 0.018+Math.random()*0.018, speed: 0.8+Math.random()*1.4
     });
   }
 
@@ -1699,9 +1699,9 @@ function updateNowPlayingOverlay(){
     var sp = npPool[Math.floor(Math.random()*npPool.length)];
     npWisps.push({
       x: bx + sp.fx*bw, y: by + sp.fy*bh + (Math.random()-0.5)*6,
-      r: 4+Math.random()*10, vx: -(0.5+Math.random()*1.2),
+      r: 5+Math.random()*12, vx: -(0.5+Math.random()*1.2),
       vy: (Math.random()-0.3)*1.2, alpha: 0.45+Math.random()*0.35,
-      life: 1.0, decay: 0.015+Math.random()*0.022, grow: 1.2+Math.random()*2.5
+      life: 1.0, decay: 0.010+Math.random()*0.014, grow: 1.5+Math.random()*3.0
     });
   }
 
@@ -1716,17 +1716,16 @@ function updateNowPlayingOverlay(){
     // road.png is a wide panoramic (1900×545) that covers the middle band.
     // Top and bottom are filled with the matching sepia tan colour.
     // Road band occupies roughly 55% of screen height, centred vertically.
-    var TAN = '#8a7050';
-
-    var roadBandH = H * 0.56;          // height road.png is drawn at
-    var roadBandY = H * 0.22;          // y where road band starts
+    var roadBandH = H * 0.56;
+    var roadBandY = H * 0.22;
     var ROAD_NAT_W = 1900;
     var tileW = ROAD_NAT_W * (roadBandH / 545);
 
-    // Fill top and bottom with tan
+    // Fill top and bottom with same tan colour (sampled from top of road image)
+    var TAN = '#8a7050';
     npCtx.fillStyle = TAN;
-    npCtx.fillRect(0, 0, W, roadBandY);                        // top
-    npCtx.fillRect(0, roadBandY + roadBandH, W, H - roadBandY - roadBandH); // bottom
+    npCtx.fillRect(0, 0, W, roadBandY);
+    npCtx.fillRect(0, roadBandY + roadBandH, W, H - roadBandY - roadBandH);
 
     // Scroll road tiles across the middle band
     npRoadOffset = (npRoadOffset + 1.2) % (tileW * 2);
@@ -1752,16 +1751,15 @@ function updateNowPlayingOverlay(){
     npCtx.restore();
 
     // ── Bike ─────────────────────────────────────────────────────────────────
-    // road.png: the road tarmac surface sits at ~87% down within the image.
-    // So road surface in screen coords = roadBandY + roadBandH * 0.87
-    // Bike wheels (bottom of bike PNG) sit at ~95% of bikeH.
     npBounceT += 0.09;
     var bobY  = Math.sin(npBounceT) * 3.5 + Math.sin(npBounceT * 2.3) * 1.2;
     var bikeH = H * 0.50;
     var bikeW = (728 / 576) * bikeH;
-    var bikeX = W * 0.03;
-    var roadSurface = roadBandY + roadBandH * 0.87;
-    var bikeY = roadSurface - bikeH * 0.95 + bobY;
+    // Centre horizontally
+    var bikeX = (W - bikeW) / 2;
+    // Lower onto road — push wheels down to sit on tarmac line
+    var roadSurface = roadBandY + roadBandH * 0.92;
+    var bikeY = roadSurface - bikeH * 0.97 + bobY;
 
     // Spawn particles
     if(Math.random() < 0.70) npSpawnStreak(bikeX, bikeY, bikeW, bikeH);
@@ -1999,7 +1997,7 @@ document.body.addEventListener('touchmove',function(e){if(e.target===document.bo
 
 <script>
 // Topbar — scrolling road (mirror-tiled) + stationary bouncing bike + wind particles
-// INDEX 111: spacer div sized by JS so controls always clear the bike
+// INDEX 112: spacer div sized by JS so controls always clear the bike
 (function(){
   var canvas = document.getElementById('topbar-canvas');
   var ctx = canvas.getContext('2d');
