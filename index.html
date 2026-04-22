@@ -1,5 +1,5 @@
 <!-- ============================================================ -->
-<!-- GoLoco · INDEX 108                                            -->
+<!-- GoLoco · INDEX 111                                            -->
 <!-- ============================================================ -->
 <!DOCTYPE html>
 <html lang="en">
@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="GoLoco">
-<title>GoLoco · INDEX 108</title>
+<title>GoLoco · INDEX 111</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;900&display=swap" rel="stylesheet">
 <style>
@@ -544,7 +544,7 @@ body::before {
 </head>
 <body>
 <script>/* *** BUMP_VERSION_HERE *** */
-const APP_VERSION = 'INDEX 108';
+const APP_VERSION = 'INDEX 111';
 </script>
 <div id="app">
 
@@ -712,7 +712,9 @@ const APP_VERSION = 'INDEX 108';
 
 <!-- NOW PLAYING OVERLAY -->
 <div id="np-overlay">
-  <div id="np-bg">♫</div>
+  <div id="np-bg">
+    <canvas id="np-scene-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%;display:none;"></canvas>
+  </div>
   <div id="np-ui">
     <button id="np-close" onclick="closeNowPlaying()">▾ CLOSE</button>
     <div id="np-spacer"></div>
@@ -1606,21 +1608,215 @@ document.getElementById('shuffle-btn').classList.add('active');
 })();
 
 // NOW PLAYING OVERLAY
-function openNowPlaying(){const ov=document.getElementById('np-overlay');ov.classList.add('open');requestAnimationFrame(()=>updateNowPlayingOverlay());}
+function openNowPlaying(){
+  const ov=document.getElementById('np-overlay');
+  ov.classList.add('open');
+  requestAnimationFrame(()=>updateNowPlayingOverlay());
+}
 function closeNowPlaying(){
-  const ov=document.getElementById('np-overlay');ov.classList.remove('open');
-  document.getElementById('app').style.display='none';void document.getElementById('app').offsetHeight;document.getElementById('app').style.display='';
+  const ov=document.getElementById('np-overlay');
+  ov.classList.remove('open');
+  stopNPScene();
+  document.getElementById('app').style.display='none';
+  void document.getElementById('app').offsetHeight;
+  document.getElementById('app').style.display='';
   renderView();
 }
 function updateNowPlayingOverlay(){
   const t=currentIndex>=0?library[currentIndex]:null;
-  const bg=document.getElementById('np-bg');bg.innerHTML='';
-  if(t&&t.art){const img=document.createElement('img');img.setAttribute('src',t.art);bg.appendChild(img);bg.style.background='#0d0804';}
-  else{bg.style.background='#0d0804';}
+  const bg=document.getElementById('np-bg');
+
+  // Clear any previous content except the canvas
+  Array.from(bg.childNodes).forEach(n=>{ if(n.id!=='np-scene-canvas') bg.removeChild(n); });
+
+  if(t&&t.art){
+    stopNPScene();
+    document.getElementById('np-scene-canvas').style.display='none';
+    const img=document.createElement('img');
+    img.setAttribute('src',t.art);
+    bg.appendChild(img);
+    bg.style.background='#0d0804';
+  } else {
+    bg.style.background='#0d0804';
+    document.getElementById('np-scene-canvas').style.display='block';
+    startNPScene();
+  }
   document.getElementById('np-title').textContent=t?(t.title||t.name).toUpperCase():'NO TRACK';
   document.getElementById('np-artist').textContent=t?t.artist.toUpperCase()+(t.album!=='Unknown Album'?' — '+t.album.toUpperCase():''):'—';
   document.getElementById('np-play-btn').textContent=isPlaying?'⏸':'▶';
 }
+
+// ── Full-screen animated scene (shown when no album art) ─────────────────────
+(function(){
+  var npCanvas = null;
+  var npCtx = null;
+  var npRaf = null;
+  var npRoadImg = new Image();
+  var npBikeImg = new Image();
+  var npRoadLoaded = false;
+  var npBikeLoaded = false;
+  npRoadImg.onload = function(){ npRoadLoaded = true; };
+  npBikeImg.onload = function(){ npBikeLoaded = true; };
+  npRoadImg.src = 'road.png';
+  npBikeImg.src = 'BIKEw.png';
+
+  var npRoadOffset = 0;
+  var npBounceT = 0;
+  var npStreaks = [], npWisps = [];
+
+  // Particle spawn points — same proportions as topbar system
+  var NP_SPAWN = [
+    { fx:0.38, fy:0.13, w:3 },
+    { fx:0.36, fy:0.20, w:3 },
+    { fx:0.34, fy:0.28, w:2 },
+    { fx:0.33, fy:0.36, w:2 },
+    { fx:0.33, fy:0.44, w:1 },
+    { fx:0.20, fy:0.52, w:2 },
+    { fx:0.16, fy:0.62, w:2 },
+    { fx:0.18, fy:0.74, w:1 },
+  ];
+  var npPool = [];
+  NP_SPAWN.forEach(function(p){ for(var i=0;i<p.w;i++) npPool.push(p); });
+
+  function npResize(){
+    if(!npCanvas) return;
+    npCanvas.width  = npCanvas.offsetWidth;
+    npCanvas.height = npCanvas.offsetHeight;
+    npStreaks = []; npWisps = [];
+  }
+
+  function npSpawnStreak(bx, by, bw, bh){
+    var sp = npPool[Math.floor(Math.random()*npPool.length)];
+    npStreaks.push({
+      x: bx + sp.fx*bw, y: by + sp.fy*bh + (Math.random()-0.5)*5,
+      len: 40+Math.random()*90, alpha: 0.75+Math.random()*0.25,
+      vy: (Math.random()-0.3)*0.8, life: 1.0,
+      decay: 0.030+Math.random()*0.030, speed: 0.8+Math.random()*1.4
+    });
+  }
+
+  function npSpawnWisp(bx, by, bw, bh){
+    var sp = npPool[Math.floor(Math.random()*npPool.length)];
+    npWisps.push({
+      x: bx + sp.fx*bw, y: by + sp.fy*bh + (Math.random()-0.5)*6,
+      r: 4+Math.random()*10, vx: -(0.5+Math.random()*1.2),
+      vy: (Math.random()-0.3)*1.2, alpha: 0.45+Math.random()*0.35,
+      life: 1.0, decay: 0.015+Math.random()*0.022, grow: 1.2+Math.random()*2.5
+    });
+  }
+
+  function npDraw(){
+    if(!npCanvas || !npRoadLoaded || !npBikeLoaded) { npRaf=requestAnimationFrame(npDraw); return; }
+    var W = npCanvas.width, H = npCanvas.height;
+    if(W===0||H===0){ npRaf=requestAnimationFrame(npDraw); return; }
+
+    npCtx.clearRect(0,0,W,H);
+
+    // ── Layout ───────────────────────────────────────────────────────────────
+    // road.png is a wide panoramic (1900×545) that covers the middle band.
+    // Top and bottom are filled with the matching sepia tan colour.
+    // Road band occupies roughly 55% of screen height, centred vertically.
+    var TAN = '#8a7050';
+
+    var roadBandH = H * 0.56;          // height road.png is drawn at
+    var roadBandY = H * 0.22;          // y where road band starts
+    var ROAD_NAT_W = 1900;
+    var tileW = ROAD_NAT_W * (roadBandH / 545);
+
+    // Fill top and bottom with tan
+    npCtx.fillStyle = TAN;
+    npCtx.fillRect(0, 0, W, roadBandY);                        // top
+    npCtx.fillRect(0, roadBandY + roadBandH, W, H - roadBandY - roadBandH); // bottom
+
+    // Scroll road tiles across the middle band
+    npRoadOffset = (npRoadOffset + 1.2) % (tileW * 2);
+    npCtx.save();
+    npCtx.beginPath();
+    npCtx.rect(0, roadBandY, W, roadBandH);
+    npCtx.clip();
+    var startIdx = Math.floor(npRoadOffset / tileW);
+    var startX   = -(npRoadOffset % tileW);
+    var ti = startIdx, tx = startX;
+    while(tx < W){
+      if(ti % 2 === 1){
+        npCtx.save();
+        npCtx.translate(tx + tileW, roadBandY);
+        npCtx.scale(-1, 1);
+        npCtx.drawImage(npRoadImg, 0, 0, tileW, roadBandH);
+        npCtx.restore();
+      } else {
+        npCtx.drawImage(npRoadImg, tx, roadBandY, tileW, roadBandH);
+      }
+      tx += tileW; ti++;
+    }
+    npCtx.restore();
+
+    // ── Bike ─────────────────────────────────────────────────────────────────
+    // road.png: the road tarmac surface sits at ~87% down within the image.
+    // So road surface in screen coords = roadBandY + roadBandH * 0.87
+    // Bike wheels (bottom of bike PNG) sit at ~95% of bikeH.
+    npBounceT += 0.09;
+    var bobY  = Math.sin(npBounceT) * 3.5 + Math.sin(npBounceT * 2.3) * 1.2;
+    var bikeH = H * 0.50;
+    var bikeW = (728 / 576) * bikeH;
+    var bikeX = W * 0.03;
+    var roadSurface = roadBandY + roadBandH * 0.87;
+    var bikeY = roadSurface - bikeH * 0.95 + bobY;
+
+    // Spawn particles
+    if(Math.random() < 0.70) npSpawnStreak(bikeX, bikeY, bikeW, bikeH);
+    if(Math.random() < 0.60) npSpawnWisp(bikeX, bikeY, bikeW, bikeH);
+
+    // Draw wisps
+    npWisps = npWisps.filter(function(w){ return w.life > 0; });
+    npWisps.forEach(function(w){
+      w.x += w.vx; w.y += w.vy; w.r += w.grow * 0.10; w.life -= w.decay;
+      if(w.life <= 0) return;
+      var a = w.alpha * Math.pow(w.life, 0.6);
+      npCtx.beginPath(); npCtx.arc(w.x, w.y, w.r, 0, Math.PI*2);
+      npCtx.fillStyle = 'rgba(80,75,70,' + a + ')'; npCtx.fill();
+    });
+
+    // Draw streaks
+    npStreaks = npStreaks.filter(function(s){ return s.life > 0; });
+    npStreaks.forEach(function(s){
+      s.x -= s.speed; s.y += s.vy; s.life -= s.decay;
+      if(s.life <= 0) return;
+      var a = s.alpha * Math.pow(s.life, 0.5);
+      var g = npCtx.createLinearGradient(s.x, s.y, s.x - s.len, s.y);
+      g.addColorStop(0, 'rgba(80,75,70,' + a + ')');
+      g.addColorStop(1, 'rgba(80,75,70,0)');
+      npCtx.strokeStyle = g; npCtx.lineWidth = 1.0 + s.life * 2.2; npCtx.lineCap = 'round';
+      npCtx.beginPath(); npCtx.moveTo(s.x, s.y); npCtx.lineTo(s.x - s.len, s.y); npCtx.stroke();
+      npCtx.lineCap = 'butt';
+    });
+
+    // Bike on top of particles
+    npCtx.drawImage(npBikeImg, bikeX, bikeY, bikeW, bikeH);
+
+    // Subtle vignette
+    var vig = npCtx.createRadialGradient(W/2, H/2, H*0.2, W/2, H/2, H*0.85);
+    vig.addColorStop(0, 'rgba(0,0,0,0)');
+    vig.addColorStop(1, 'rgba(0,0,0,0.40)');
+    npCtx.fillStyle = vig; npCtx.fillRect(0, 0, W, H);
+
+    npRaf = requestAnimationFrame(npDraw);
+  }
+
+  window.startNPScene = function(){
+    npCanvas = document.getElementById('np-scene-canvas');
+    npCtx = npCanvas.getContext('2d');
+    npResize();
+    if(npRaf) cancelAnimationFrame(npRaf);
+    npStreaks=[]; npWisps=[];
+    npRaf = requestAnimationFrame(npDraw);
+  };
+
+  window.stopNPScene = function(){
+    if(npRaf){ cancelAnimationFrame(npRaf); npRaf=null; }
+    npStreaks=[]; npWisps=[];
+  };
+})();
 function npSeek(e){if(!audio.duration)return;const r=e.currentTarget.getBoundingClientRect();audio.currentTime=((e.clientX-r.left)/r.width)*audio.duration;}
 
 audio.addEventListener('timeupdate',()=>{
@@ -1803,7 +1999,7 @@ document.body.addEventListener('touchmove',function(e){if(e.target===document.bo
 
 <script>
 // Topbar — scrolling road (mirror-tiled) + stationary bouncing bike + wind particles
-// INDEX 108: spacer div sized by JS so controls always clear the bike
+// INDEX 111: spacer div sized by JS so controls always clear the bike
 (function(){
   var canvas = document.getElementById('topbar-canvas');
   var ctx = canvas.getContext('2d');
