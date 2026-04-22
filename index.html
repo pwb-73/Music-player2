@@ -1,5 +1,5 @@
 <!-- ============================================================ -->
-<!-- GoLoco · INDEX 100                                            -->
+<!-- GoLoco · INDEX 101                                            -->
 <!-- ============================================================ -->
 <!DOCTYPE html>
 <html lang="en">
@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="GoLoco">
-<title>GoLoco · INDEX 100</title>
+<title>GoLoco · INDEX 101</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;900&display=swap" rel="stylesheet">
 <style>
@@ -544,7 +544,7 @@ body::before {
 </head>
 <body>
 <script>/* *** BUMP_VERSION_HERE *** */
-const APP_VERSION = 'INDEX 100';
+const APP_VERSION = 'INDEX 101';
 </script>
 <div id="app">
 
@@ -1802,8 +1802,8 @@ document.body.addEventListener('touchmove',function(e){if(e.target===document.bo
 </script>
 
 <script>
-// Topbar — scrolling road (mirror-tiled) + stationary bouncing bike
-// INDEX 100: spacer div sized by JS so controls always clear the bike
+// Topbar — scrolling road (mirror-tiled) + stationary bouncing bike + wind particles
+// INDEX 101: spacer div sized by JS so controls always clear the bike
 (function(){
   var canvas = document.getElementById('topbar-canvas');
   var ctx = canvas.getContext('2d');
@@ -1817,7 +1817,7 @@ document.body.addEventListener('touchmove',function(e){if(e.target===document.bo
   var roadOffset = 0;
   var ROAD_NATURAL_W = 1900;
   var ROAD_NATURAL_H = 545;
-  var roadSpeed = 1.53;  // was 2.3 — slowed by ~1/3
+  var roadSpeed = 1.53;
 
   var bounceT = 0;
   var BOUNCE_FREQ = 0.09;
@@ -1825,6 +1825,116 @@ document.body.addEventListener('touchmove',function(e){if(e.target===document.bo
 
   var cw = 0, ch = 0, tileW = 0;
   var bikeW = 0, bikeH = 0, bikeX = 0, bikeCenterY = 0;
+
+  // ── Wind particle system ─────────────────────────────────────────────────
+  // Spawn points are expressed as fractions of the bike image (728×576).
+  // The rider faces RIGHT. Head is ~52% across, ~12% down in the image.
+  // Back of head, neck, and upper-to-mid back trail leftward (negative x).
+  //
+  // BIKEw.png anatomy (approximate fractions):
+  //   Head top-back:    x=0.500, y=0.115
+  //   Head mid-back:    x=0.490, y=0.155
+  //   Neck:             x=0.475, y=0.210
+  //   Upper back:       x=0.455, y=0.265
+  //   Mid back:         x=0.440, y=0.330
+  //   Lower back/seat:  x=0.430, y=0.400
+  var SPAWN_PTS = [
+    { fx: 0.500, fy: 0.115, weight: 3 },  // top of head — most prominent
+    { fx: 0.490, fy: 0.155, weight: 3 },  // back of head
+    { fx: 0.475, fy: 0.210, weight: 2 },  // neck
+    { fx: 0.455, fy: 0.265, weight: 2 },  // upper back / shoulder
+    { fx: 0.440, fy: 0.330, weight: 1 },  // mid back
+    { fx: 0.430, fy: 0.400, weight: 1 },  // lower back
+  ];
+
+  // Build weighted pool for natural spawn distribution
+  var spawnPool = [];
+  SPAWN_PTS.forEach(function(p){ for(var i=0;i<p.weight;i++) spawnPool.push(p); });
+
+  var streaks = [];
+  var wisps   = [];
+
+  function getBikeOrigin(bobY) {
+    return { x: bikeX, y: bikeCenterY + bobY };
+  }
+
+  function spawnStreak(bobY) {
+    var o = getBikeOrigin(bobY);
+    var sp = spawnPool[Math.floor(Math.random() * spawnPool.length)];
+    var sx = o.x + sp.fx * bikeW;
+    var sy = o.y + sp.fy * bikeH;
+    streaks.push({
+      x:     sx,
+      y:     sy + (Math.random() - 0.5) * 3,
+      len:   22 + Math.random() * 55,
+      alpha: 0.45 + Math.random() * 0.35,
+      vy:    (Math.random() - 0.5) * 0.5,
+      life:  1.0,
+      decay: 0.042 + Math.random() * 0.042,
+      speed: 2.2 + Math.random() * 2.8
+    });
+  }
+
+  function spawnWisp(bobY) {
+    var o = getBikeOrigin(bobY);
+    var sp = spawnPool[Math.floor(Math.random() * spawnPool.length)];
+    var sx = o.x + sp.fx * bikeW;
+    var sy = o.y + sp.fy * bikeH;
+    wisps.push({
+      x:     sx,
+      y:     sy + (Math.random() - 0.5) * 4,
+      r:     1.8 + Math.random() * 4,
+      vx:    -(1.4 + Math.random() * 3.2),
+      vy:    (Math.random() - 0.5) * 0.8,
+      alpha: 0.18 + Math.random() * 0.20,
+      life:  1.0,
+      decay: 0.020 + Math.random() * 0.028,
+      grow:  0.7 + Math.random() * 1.6
+    });
+  }
+
+  function updateParticles(bobY) {
+    // Spawn — both effects, tuned for natural density
+    if (Math.random() < 0.55) spawnStreak(bobY);
+    if (Math.random() < 0.48) spawnWisp(bobY);
+
+    // Draw wisps behind streaks
+    wisps = wisps.filter(function(w){ return w.life > 0; });
+    wisps.forEach(function(w){
+      w.x += w.vx;
+      w.y += w.vy;
+      w.r  += w.grow * 0.09;
+      w.life -= w.decay;
+      if (w.life <= 0) return;
+      var a = w.alpha * Math.pow(w.life, 0.75);
+      ctx.beginPath();
+      ctx.arc(w.x, w.y, w.r, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(210,205,195,' + a + ')';
+      ctx.fill();
+    });
+
+    // Draw streaks
+    streaks = streaks.filter(function(s){ return s.life > 0; });
+    streaks.forEach(function(s){
+      s.x -= s.speed;
+      s.y += s.vy;
+      s.life -= s.decay;
+      if (s.life <= 0) return;
+      var a = s.alpha * Math.pow(s.life, 0.55);
+      var grad = ctx.createLinearGradient(s.x, s.y, s.x - s.len, s.y);
+      grad.addColorStop(0, 'rgba(238,232,218,' + a + ')');
+      grad.addColorStop(1, 'rgba(238,232,218,0)');
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = 0.7 + s.life * 1.5;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(s.x, s.y);
+      ctx.lineTo(s.x - s.len, s.y);
+      ctx.stroke();
+      ctx.lineCap = 'butt';
+    });
+  }
+  // ── End wind particles ───────────────────────────────────────────────────
 
   function resize(){
     canvas.width  = canvas.offsetWidth;
@@ -1834,10 +1944,11 @@ document.body.addEventListener('touchmove',function(e){if(e.target===document.bo
     tileW = ROAD_NATURAL_W * (ch / ROAD_NATURAL_H);
     bikeH = ch * 0.90;
     bikeW = (728 / 576) * bikeH;
-    bikeX = 4; // flush left, just 4px margin
+    bikeX = 4;
     bikeCenterY = (ch - bikeH) / 2;
-    // Push the flex controls row to start after the bike
     if(spacer) spacer.style.width = (bikeX + bikeW + 8) + 'px';
+    // Clear particles on resize so they don't appear at wrong positions
+    streaks = []; wisps = [];
   }
 
   function drawTile(x, mirrored){
@@ -1872,6 +1983,10 @@ document.body.addEventListener('touchmove',function(e){if(e.target===document.bo
 
     bounceT += BOUNCE_FREQ;
     var bobY = Math.sin(bounceT) * BOUNCE_AMP + Math.sin(bounceT * 2.3) * 0.8;
+
+    // Draw particles BEFORE bike so they appear to come from behind the rider
+    updateParticles(bobY);
+
     ctx.drawImage(bike, bikeX, bikeCenterY + bobY, bikeW, bikeH);
   }
 
