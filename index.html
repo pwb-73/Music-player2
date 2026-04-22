@@ -1,5 +1,5 @@
 <!-- ============================================================ -->
-<!-- GoLoco · INDEX 97                                            -->
+<!-- GoLoco · INDEX 98                                            -->
 <!-- ============================================================ -->
 <!DOCTYPE html>
 <html lang="en">
@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="GoLoco">
-<title>GoLoco · INDEX 97</title>
+<title>GoLoco · INDEX 98</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;900&display=swap" rel="stylesheet">
 <style>
@@ -544,7 +544,7 @@ body::before {
 </head>
 <body>
 <script>/* *** BUMP_VERSION_HERE *** */
-const APP_VERSION = 'INDEX 97';
+const APP_VERSION = 'INDEX 98';
 </script>
 <div id="app">
 
@@ -819,31 +819,59 @@ let _audioCtx = null, _analyserL = null, _analyserR = null;
 let _splitter = null, _panner = null, _masterGain = null;
 let _fftL = null, _fftR = null;
 
+// Track whether createMediaElementSource has been called — it can only be called once per element
+let _mediaSourceCreated = false;
+
 function setupAudioAnalyser() {
-  if (_audioCtx) return;
+  // Already fully set up — just resume if suspended
+  if (_audioCtx && _mediaSourceCreated) {
+    if (_audioCtx.state === 'suspended') _audioCtx.resume().catch(() => {});
+    return;
+  }
   try {
-    _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const src = _audioCtx.createMediaElementSource(audio);
-    _panner = _audioCtx.createStereoPanner();
-    const balVal = parseFloat(document.getElementById('balance-slider').value || '0');
-    _panner.pan.value = balVal;
-    _splitter = _audioCtx.createChannelSplitter(2);
-    _analyserL = _audioCtx.createAnalyser();
-    _analyserR = _audioCtx.createAnalyser();
-    _analyserL.fftSize = 256; _analyserR.fftSize = 256;
-    _analyserL.smoothingTimeConstant = 0.15;
-    _analyserR.smoothingTimeConstant = 0.15;
-    _masterGain = _audioCtx.createGain();
-    _masterGain.gain.value = audio.volume;
-    src.connect(_masterGain);
-    _masterGain.connect(_panner);
-    _panner.connect(_splitter);
-    _splitter.connect(_analyserL, 0);
-    _splitter.connect(_analyserR, 1);
-    _panner.connect(_audioCtx.destination);
-    _fftL = new Uint8Array(_analyserL.frequencyBinCount);
-    _fftR = new Uint8Array(_analyserR.frequencyBinCount);
-  } catch(e) { _audioCtx = null; }
+    // Create context only once
+    if (!_audioCtx) {
+      _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    // createMediaElementSource can only be called once per audio element.
+    // Guard strictly — calling it twice throws InvalidStateError and kills audio.
+    if (!_mediaSourceCreated) {
+      const src = _audioCtx.createMediaElementSource(audio);
+      _mediaSourceCreated = true;
+
+      _masterGain = _audioCtx.createGain();
+      _masterGain.gain.value = audio.volume;
+
+      _panner = _audioCtx.createStereoPanner();
+      const balVal = parseFloat(document.getElementById('balance-slider').value || '0');
+      _panner.pan.value = balVal;
+
+      _splitter = _audioCtx.createChannelSplitter(2);
+
+      _analyserL = _audioCtx.createAnalyser();
+      _analyserR = _audioCtx.createAnalyser();
+      _analyserL.fftSize = 256; _analyserR.fftSize = 256;
+      _analyserL.smoothingTimeConstant = 0.15;
+      _analyserR.smoothingTimeConstant = 0.15;
+
+      _fftL = new Uint8Array(_analyserL.frequencyBinCount);
+      _fftR = new Uint8Array(_analyserR.frequencyBinCount);
+
+      // Wire graph: src → gain → panner → splitter → analysers
+      //                                 → destination
+      src.connect(_masterGain);
+      _masterGain.connect(_panner);
+      _panner.connect(_splitter);
+      _splitter.connect(_analyserL, 0);
+      _splitter.connect(_analyserR, 1);
+      _panner.connect(_audioCtx.destination);
+    }
+
+    if (_audioCtx.state === 'suspended') _audioCtx.resume().catch(() => {});
+  } catch(e) {
+    console.warn('AudioContext setup failed:', e);
+    // Don't null _audioCtx — a suspended context may still be usable
+  }
 }
 
 function getRealLevel(analyser, fftBuf) {
@@ -924,10 +952,10 @@ function setBalance(v) {
   if (_panner) _panner.pan.value = v;
 }
 
-// Set up real audio analysis on first play
+// Set up real audio analysis — called on every play to ensure AudioContext is running
 audio.addEventListener('play', () => {
   setupAudioAnalyser();
-}, { once: true });
+});
 
 
 // VIEW (no sidebar nav, but queue/tags/etc still reachable via grid cards)
@@ -1130,7 +1158,24 @@ function updateArtDisplay(){
 
 // PLAYBACK
 function playGroup(type,name){const key=type==='albums'?'album':type==='artists'?'artist':'composer';queue=library.filter(t=>t[key]===name).map(t=>library.indexOf(t));if(queue.length)playTrack(queue[0]);showView('queue',null);}
-function togglePlay(){if(!audio.src&&library.length){playTrack(0);return;}if(isPlaying){clearFade();audio.pause();isPlaying=false;clearTimeout(vuAnimFrame);resetVU();}else{audio.play();isPlaying=true;animateVU();}updatePlayBtn();}
+function togglePlay(){
+  if(!audio.src&&library.length){playTrack(0);return;}
+  if(isPlaying){
+    clearFade();audio.pause();isPlaying=false;clearTimeout(vuAnimFrame);resetVU();
+  } else {
+    setupAudioAnalyser();
+    const doPlay = () => {
+      audio.play().then(()=>{isPlaying=true;animateVU();updatePlayBtn();}).catch(()=>{});
+    };
+    if(_audioCtx && _audioCtx.state==='suspended'){
+      _audioCtx.resume().then(doPlay).catch(doPlay);
+    } else {
+      doPlay();
+    }
+    return; // updatePlayBtn called inside doPlay
+  }
+  updatePlayBtn();
+}
 
 let fadeInterval=null;
 let fadeStartVol=1;
@@ -1548,6 +1593,12 @@ function playTrack(idx){
   clearFade();
   currentIndex=idx; const t=library[idx];
   playedThisSession.add(idx);
+
+  // Ensure AudioContext exists and is running before touching audio.src
+  // This is the critical step — setting src while context is suspended is fine,
+  // but we want the context ready so play() doesn't race against resume()
+  setupAudioAnalyser();
+
   audio.src=t.url;
   const vol=parseFloat(document.getElementById('vol-slider').value);
   audio.volume=vol;if(_masterGain)_masterGain.gain.value=vol;
@@ -1556,53 +1607,97 @@ function playTrack(idx){
   updateArtDisplay(); renderView(); updateNowPlayingOverlay();
   queueArtLookup(t);
 
-  // Attempt play with up to 3 retries on failure (fixes grey flicker with large libraries)
   // playToken guards against stale retries firing after track has changed
   const playToken = {}; playTrack._token = playToken;
   let attempts = 0;
+
   function attemptPlay(){
     if(playTrack._token !== playToken) return; // stale retry, abort
     attempts++;
-    audio.play().then(()=>{
-      if(playTrack._token !== playToken) return; // track changed while awaiting
-      isPlaying=true; updatePlayBtn(); clearTimeout(vuAnimFrame); animateVU();
-      // Only auto-scroll if user is not manually browsing
-      setTimeout(()=>{
-        if(currentIndex===idx){ updateArtDisplay(); if(!userIsScrolling) scrollPlayingRowToCenter(); }
-      }, 800);
-    }).catch(err=>{
+
+    // If AudioContext is suspended (common after iOS background), resume first
+    const doPlay = () => {
       if(playTrack._token !== playToken) return;
-      if(attempts < 3){
-        setTimeout(attemptPlay, 300 * attempts); // 300ms, 600ms
-      } else {
-        showNotif('TAP AGAIN TO PLAY');
-        isPlaying=false; updatePlayBtn();
-      }
-    });
+      audio.play().then(()=>{
+        if(playTrack._token !== playToken) return;
+        isPlaying=true; updatePlayBtn(); clearTimeout(vuAnimFrame); animateVU();
+        setTimeout(()=>{
+          if(currentIndex===idx){ updateArtDisplay(); if(!userIsScrolling) scrollPlayingRowToCenter(); }
+        }, 800);
+      }).catch(err=>{
+        if(playTrack._token !== playToken) return;
+        if(attempts < 3){
+          setTimeout(attemptPlay, 300 * attempts);
+        } else {
+          showNotif('TAP AGAIN TO PLAY');
+          isPlaying=false; updatePlayBtn();
+        }
+      });
+    };
+
+    if(_audioCtx && _audioCtx.state === 'suspended'){
+      _audioCtx.resume().then(doPlay).catch(doPlay);
+    } else {
+      doPlay();
+    }
   }
   attemptPlay();
 }
 
 document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(e.code==='Space'){e.preventDefault();togglePlay();}if(e.code==='ArrowRight')nextTrack();if(e.code==='ArrowLeft')prevTrack();if(e.code==='KeyS')toggleShuffle();});
 
-// iOS background/foreground handling
-// When the user switches away and back, Safari suspends the AudioContext.
-// visibilitychange fires when the app returns to foreground — resume the
-// context so playback and VU meters work again without needing a page reload.
+// ── iOS background / foreground recovery ────────────────────────────────────
+// Safari suspends AudioContext and sometimes kills blob URLs when backgrounded.
+// We need to handle both visibilitychange (tab switch) and pageshow (back-nav in PWA).
+
+function handleForegroundReturn() {
+  // 1. Resume AudioContext — must happen before any audio.play() call
+  if (_audioCtx && _audioCtx.state === 'suspended') {
+    _audioCtx.resume().catch(() => {});
+  }
+
+  // 2. If we think we're playing but audio has actually paused (iOS killed it),
+  //    attempt to resume. Use a short delay so the browser is fully foregrounded.
+  if (isPlaying && audio.paused) {
+    setTimeout(() => {
+      if (!isPlaying || !audio.paused) return; // state changed
+      const doResume = () => {
+        audio.play()
+          .then(() => { animateVU(); })
+          .catch(() => {
+            // Blob URL may have expired — nothing we can do without user gesture.
+            // Show a prompt so the user knows to tap play.
+            isPlaying = false; updatePlayBtn();
+            showNotif('TAP PLAY TO RESUME');
+          });
+      };
+      if (_audioCtx && _audioCtx.state === 'suspended') {
+        _audioCtx.resume().then(doResume).catch(doResume);
+      } else {
+        doResume();
+      }
+    }, 300);
+  } else if (isPlaying) {
+    // Audio is still running but VU animation may have been cleared
+    clearTimeout(vuAnimFrame);
+    animateVU();
+  }
+}
+
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') {
-    if (_audioCtx && _audioCtx.state === 'suspended') {
-      _audioCtx.resume().then(() => {
-        if (isPlaying) animateVU();
-      }).catch(() => {});
-    }
-    // Re-sync play button state in case iOS killed the audio element
-    if (isPlaying && audio.paused) {
-      audio.play().catch(() => { isPlaying=false; updatePlayBtn(); });
-    }
+    handleForegroundReturn();
   } else {
     // Going to background — stop VU animation to save battery
     clearTimeout(vuAnimFrame);
+  }
+});
+
+// pageshow fires on iOS when returning via the back button in PWA / Safari
+// persisted=true means the page came from bfcache (frozen, not reloaded)
+window.addEventListener('pageshow', (e) => {
+  if (e.persisted) {
+    handleForegroundReturn();
   }
 });
 
@@ -1612,7 +1707,7 @@ document.body.addEventListener('touchmove',function(e){if(e.target===document.bo
 
 <script>
 // Topbar — scrolling road (mirror-tiled) + stationary bouncing bike
-// INDEX 97: spacer div sized by JS so controls always clear the bike
+// INDEX 98: spacer div sized by JS so controls always clear the bike
 (function(){
   var canvas = document.getElementById('topbar-canvas');
   var ctx = canvas.getContext('2d');
