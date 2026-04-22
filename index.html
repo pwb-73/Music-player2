@@ -1,5 +1,5 @@
 <!-- ============================================================ -->
-<!-- GoLoco · INDEX 103                                            -->
+<!-- GoLoco · INDEX 104                                            -->
 <!-- ============================================================ -->
 <!DOCTYPE html>
 <html lang="en">
@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="GoLoco">
-<title>GoLoco · INDEX 103</title>
+<title>GoLoco · INDEX 104</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;900&display=swap" rel="stylesheet">
 <style>
@@ -544,7 +544,7 @@ body::before {
 </head>
 <body>
 <script>/* *** BUMP_VERSION_HERE *** */
-const APP_VERSION = 'INDEX 103';
+const APP_VERSION = 'INDEX 104';
 </script>
 <div id="app">
 
@@ -1803,7 +1803,7 @@ document.body.addEventListener('touchmove',function(e){if(e.target===document.bo
 
 <script>
 // Topbar — scrolling road (mirror-tiled) + stationary bouncing bike + wind particles
-// INDEX 103: spacer div sized by JS so controls always clear the bike
+// INDEX 104: spacer div sized by JS so controls always clear the bike
 (function(){
   var canvas = document.getElementById('topbar-canvas');
   var ctx = canvas.getContext('2d');
@@ -1910,7 +1910,7 @@ document.body.addEventListener('touchmove',function(e){if(e.target===document.bo
       var a = w.alpha * Math.pow(w.life, 0.6);
       ctx.beginPath();
       ctx.arc(w.x, w.y, w.r, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(255,252,245,' + a + ')';
+      ctx.fillStyle = 'rgba(80,75,70,' + a + ')';
       ctx.fill();
     });
 
@@ -1923,8 +1923,8 @@ document.body.addEventListener('touchmove',function(e){if(e.target===document.bo
       if (s.life <= 0) return;
       var a = s.alpha * Math.pow(s.life, 0.45);
       var grad = ctx.createLinearGradient(s.x, s.y, s.x - s.len, s.y);
-      grad.addColorStop(0, 'rgba(255,252,245,' + a + ')');
-      grad.addColorStop(1, 'rgba(255,252,245,0)');
+      grad.addColorStop(0, 'rgba(80,75,70,' + a + ')');
+      grad.addColorStop(1, 'rgba(80,75,70,0)');
       ctx.strokeStyle = grad;
       ctx.lineWidth = 1.2 + s.life * 2.0;
       ctx.lineCap = 'round';
