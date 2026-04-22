@@ -1,5 +1,5 @@
 <!-- ============================================================ -->
-<!-- GoLoco · INDEX 105                                            -->
+<!-- GoLoco · INDEX 106                                            -->
 <!-- ============================================================ -->
 <!DOCTYPE html>
 <html lang="en">
@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="GoLoco">
-<title>GoLoco · INDEX 105</title>
+<title>GoLoco · INDEX 106</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;900&display=swap" rel="stylesheet">
 <style>
@@ -544,7 +544,7 @@ body::before {
 </head>
 <body>
 <script>/* *** BUMP_VERSION_HERE *** */
-const APP_VERSION = 'INDEX 105';
+const APP_VERSION = 'INDEX 106';
 </script>
 <div id="app">
 
@@ -1803,7 +1803,7 @@ document.body.addEventListener('touchmove',function(e){if(e.target===document.bo
 
 <script>
 // Topbar — scrolling road (mirror-tiled) + stationary bouncing bike + wind particles
-// INDEX 105: spacer div sized by JS so controls always clear the bike
+// INDEX 106: spacer div sized by JS so controls always clear the bike
 (function(){
   var canvas = document.getElementById('topbar-canvas');
   var ctx = canvas.getContext('2d');
@@ -1827,25 +1827,16 @@ document.body.addEventListener('touchmove',function(e){if(e.target===document.bo
   var bikeW = 0, bikeH = 0, bikeX = 0, bikeCenterY = 0;
 
   // ── Wind particle system ─────────────────────────────────────────────────
-  // Spawn points mapped to the LEFT edge of the rider's silhouette in BIKEw.png.
-  // The rider sits centre-right of the image facing right.
-  // We spawn just behind (to the left of) the head and back outline so particles
-  // appear to stream off the body without ever drawing on top of it.
-  //
-  // BIKEw.png image fractions — left edge of rider silhouette:
-  //   Back of head:     x=0.455, y=0.120
-  //   Head lower back:  x=0.440, y=0.165
-  //   Neck:             x=0.425, y=0.215
-  //   Upper back:       x=0.405, y=0.265
-  //   Mid back:         x=0.390, y=0.330
-  //   Lower back:       x=0.378, y=0.400
+  // Spawn points sit right on the left edge of the rider/bike silhouette.
+  // Particles spawn touching the body and immediately travel leftward,
+  // so they appear to peel off the back of the rider naturally.
   var SPAWN_PTS = [
-    { fx: 0.455, fy: 0.120, weight: 3 },
-    { fx: 0.440, fy: 0.165, weight: 3 },
-    { fx: 0.425, fy: 0.215, weight: 2 },
-    { fx: 0.405, fy: 0.265, weight: 2 },
-    { fx: 0.390, fy: 0.330, weight: 1 },
-    { fx: 0.378, fy: 0.400, weight: 1 },
+    { fx: 0.490, fy: 0.120, weight: 3 },  // back of head
+    { fx: 0.472, fy: 0.165, weight: 3 },  // head lower back
+    { fx: 0.455, fy: 0.215, weight: 2 },  // neck
+    { fx: 0.435, fy: 0.265, weight: 2 },  // upper back
+    { fx: 0.418, fy: 0.330, weight: 1 },  // mid back
+    { fx: 0.405, fy: 0.400, weight: 1 },  // lower back
   ];
 
   // Build weighted pool for natural spawn distribution
@@ -1866,11 +1857,11 @@ document.body.addEventListener('touchmove',function(e){if(e.target===document.bo
     var sy = o.y + sp.fy * bikeH;
     var speed = 2.5 + Math.random() * 3.5;
     streaks.push({
-      x:     sx - 8,   // birth offset leftward so never on face
+      x:     sx,
       y:     sy + (Math.random() - 0.5) * 3,
       len:   30 + Math.random() * 70,
       alpha: 0.75 + Math.random() * 0.25,
-      vy:    (Math.random() - 0.3) * 0.6,  // bias upward/level, not rightward
+      vy:    (Math.random() - 0.3) * 0.6,
       life:  1.0,
       decay: 0.035 + Math.random() * 0.035,
       speed: speed
@@ -1883,11 +1874,11 @@ document.body.addEventListener('touchmove',function(e){if(e.target===document.bo
     var sx = o.x + sp.fx * bikeW;
     var sy = o.y + sp.fy * bikeH;
     wisps.push({
-      x:     sx - 10,  // birth offset leftward so never on face
+      x:     sx,
       y:     sy + (Math.random() - 0.5) * 4,
       r:     3 + Math.random() * 6,
       vx:    -(1.8 + Math.random() * 4.0),
-      vy:    (Math.random() - 0.3) * 1.0,  // bias upward/level
+      vy:    (Math.random() - 0.3) * 1.0,
       alpha: 0.45 + Math.random() * 0.35,
       life:  1.0,
       decay: 0.018 + Math.random() * 0.025,
