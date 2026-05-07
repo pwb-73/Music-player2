@@ -1,18 +1,16 @@
 The idea was to create an off-line music player/librarian using Safari on an iPad. The whole project was/is created using AI. I am not a programmer — just persistent.
 
-I couldn't find anything out there that did this. Perhaps I didn't look hard enough, but everything seemed to have some "gotcha" quality to it. I wanted to play my MP3 collection and not pay for someone else's server, bandwidth, or subscription.
+I couldn't find anything out there that did this. Perhaps I didn't look hard enough, but everything seemed to have some "gotcha" quality to it. I wanted to play my MP3 collection and not pay a subscription or for someone else's server or bandwidth.
 
-Tried to keep it simple and legible without too much squinting. It is pretty basic but it is free to use — although if it breaks, nobody else is going to fix it.
-
-**Features to date:** Import songs (via zipped file) into the "File Manager" program on the iPad, from Dropbox. Then put the downloaded file into a directory and unzip — then songs can be imported into GoLoco. Shuffle mode. Highlighted currently playing song. On-line album art import from free sources (only when Wi-Fi connection is available). Full screen mode for album art. 4 second fade on stop. Standard transport controls (Stop, Play, Pause, Next, Previous). Songs can be played via Bluetooth in my car (2012 MB C-250), and on AirPods.
+**Features to date:** Import songs (via zipped file) into the "File Manager" program on the iPad from Dropbox. Then put the downloaded file into a directory and unzip — then songs can be imported into GoLoco. Shuffle mode. Highlighted currently playing song. On-line album art import from free sources, if available (only when Wi-Fi connection is available). Full screen mode for album art. 4 second fade on stop. Standard transport controls (Stop, Play, Pause, Next, Previous). Songs can be played via car Bluetooth and on AirPods.
 
 **Advantages:** No download subscription. Not using Apple's program environment. No fees, easier creation.
 
-**Disadvantages:** You need your own MP3 library to start with. Also you will be storing whatever songs you have decided to listen to on your iPad locally. That takes up space. I rotate my library using about a gig on the iPad — so about 500 songs at a time. Sometimes slightly unpredictable — a little bit glitchy but has never crashed or frozen. You need to be running Safari to use it. I haven't tested it with anything else. GoLoco was designed specifically for Safari on iPad and has not been tested on any other browser or device — it ~~may not~~ probably won't work correctly on Windows, Android, or other platforms.
+**Disadvantages:** You need your own MP3 library to start with. Also you will be storing whatever songs you have decided to listen to on your iPad locally. That takes up space. I rotate my library using about a gig on the iPad — so about 500 songs at a time. Sometimes slightly unpredictable due it running on HTML — a little bit glitchy but has never crashed or frozen. You need to either be running Safari to use it or save the file to your ipad desktop and open it from there. GoLoco was designed specifically for Safari on iPad and has not been tested on any other browsers or devices — it's not going to work on Windows, Android or other platforms.
 
-**To use GoLoco:** Open Safari on your iPad and go to [pwb-73.github.io/GoLoco](https://pwb-73.github.io/GoLoco). Then tap the Share button and select "Add to Home Screen" — this gives you an app-like icon on your iPad that always loads the latest version automatically. No download or installation needed.
+**To use GoLoco:** Open Safari on your iPad and go to [pwb-73.github.io/GoLoco](https://pwb-73.github.io/GoLoco). Then tap the Share button and select "Add to Home Screen" — this gives you an app-like icon on your iPad that always loads the latest version automatically. You can also use it in Safari just like any web page, no download or installation needed.
 
-If you would like to support my project, please buy me a coffee and give me a way to contact you — I will update you with any changes, improvements, or fixes. If not, just check back occasionally.
+If you would like to support my project, please buy me a coffee and give me a way to contact you — I will update you with any news, changes, improvements, or fixes. If not, just check back occasionally.
 
 [![Buy Me a Coffee](https://storage.ko-fi.com/cdn/kofi6.png?v=6)](https://ko-fi.com/M4M11WWLDC)
 
