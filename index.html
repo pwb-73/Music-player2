@@ -1,5 +1,5 @@
 <!-- ============================================================ -->
-<!-- GoLoco · INDEX 119                                            -->
+<!-- GoLoco · INDEX 120                                            -->
 <!-- ============================================================ -->
 <!DOCTYPE html>
 <html lang="en">
@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="GoLoco">
-<title>GoLoco · INDEX 119</title>
+<title>GoLoco · INDEX 120</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;900&display=swap" rel="stylesheet">
 <style>
@@ -154,7 +154,7 @@ body::before {
   text-shadow: 0 2px 8px rgba(0,0,0,0.6);
   line-height: 1;
   will-change: transform;
-  transition: opacity 0.2s ease;
+  opacity: 0;
   padding: 0 6px;
 }
 @keyframes lyricScroll {
@@ -606,7 +606,7 @@ tr.cued.playing td { background: #ffe600 !important; }
 </head>
 <body>
 <script>/* *** BUMP_VERSION_HERE *** */
-const APP_VERSION = 'INDEX 119';
+const APP_VERSION = 'INDEX 120';
 </script>
 <div id="app">
 
@@ -2118,28 +2118,55 @@ document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(
     return idx;
   }
 
-  // ── Scroll a lyric line right-to-left ──────────────────────────
+  // ── Auto-fade timer: fades line out after 2s silence between lines ──────
+  let silenceTimer = null;
+
+  function clearSilenceTimer() {
+    if (silenceTimer) { clearTimeout(silenceTimer); silenceTimer = null; }
+  }
+
+  function armSilenceTimer() {
+    clearSilenceTimer();
+    silenceTimer = setTimeout(() => {
+      // 1.5s CSS fade-out via transition on opacity
+      inner.style.transition = 'opacity 1.5s ease';
+      inner.style.opacity = '0';
+    }, 2000);
+  }
+
+  // ── Scroll a lyric line right-to-left, always starting from right edge ───
   function scrollLine(text) {
+    clearSilenceTimer();
+    // Cancel any fade-out in progress and snap back to visible
+    inner.style.transition = 'none';
+    inner.style.opacity = '0';
     inner.style.animation = 'none';
-    inner.classList.add('lyric-fade');
-    setTimeout(() => {
-      inner.textContent = text;
-      inner.classList.remove('lyric-fade');
-      const containerW = ticker.offsetWidth;
-      const textW = inner.scrollWidth;
-      if (textW <= containerW) {
-        inner.style.animation = 'none';
-        inner.style.transform = 'translateX(0)';
-      } else {
-        const startPx = containerW + 'px';
-        const endPx = '-' + textW + 'px';
-        const travelPx = containerW + textW;
-        const dur = Math.max(3, travelPx / 120);
-        inner.style.setProperty('--ls', startPx);
-        inner.style.setProperty('--le', endPx);
-        inner.style.animation = 'lyricScroll ' + dur + 's linear infinite';
-      }
-    }, 120);
+
+    // Force reflow so the 'none' animation takes effect before we set new one
+    void inner.offsetWidth;
+
+    inner.textContent = text;
+
+    // Measure after setting text
+    const containerW = ticker.offsetWidth;
+    const textW = inner.scrollWidth;
+    const travelPx = containerW + textW;       // right-edge start to left-edge end
+    // Speed: 200px/s — fast enough to feel alive, slow enough to read
+    const dur = Math.max(2, travelPx / 200);
+    const startPx = containerW + 'px';
+    const endPx   = '-' + textW + 'px';
+    inner.style.setProperty('--ls', startPx);
+    inner.style.setProperty('--le', endPx);
+    inner.style.animation = 'lyricScroll ' + dur + 's linear';
+
+    // Fade line in
+    requestAnimationFrame(() => {
+      inner.style.transition = 'opacity 0.15s ease';
+      inner.style.opacity = '1';
+    });
+
+    // Arm auto-fade for when this line finishes scrolling (or 2s silence)
+    armSilenceTimer();
   }
 
   // ── RAF loop — runs while lyrics are active and audio is playing ──────────
@@ -2152,8 +2179,9 @@ document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(
       if (text) {
         scrollLine(text);
       } else {
+        clearSilenceTimer();
         inner.style.animation = 'none';
-        inner.style.transform = 'translateX(0)';
+        inner.style.opacity = '0';
         inner.textContent = '';
       }
     }
@@ -2167,6 +2195,7 @@ document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(
 
   function stopSync() {
     if (lrcRaf) { cancelAnimationFrame(lrcRaf); lrcRaf = null; }
+    clearSilenceTimer();
   }
 
   function clearLyrics() {
@@ -2174,6 +2203,8 @@ document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(
     hasLyrics = false;
     lrcLines = [];
     lastLineIdx = -1;
+    inner.style.animation = 'none';
+    inner.style.opacity = '0';
     inner.textContent = '';
     ticker.classList.add('hidden');
   }
