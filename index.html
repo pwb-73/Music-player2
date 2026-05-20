@@ -1,5 +1,5 @@
 <!-- ============================================================ -->
-<!-- GoLoco · INDEX 115                                            -->
+<!-- GoLoco · INDEX 116                                            -->
 <!-- ============================================================ -->
 <!DOCTYPE html>
 <html lang="en">
@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="GoLoco">
-<title>GoLoco · INDEX 115</title>
+<title>GoLoco · INDEX 116</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;900&display=swap" rel="stylesheet">
 <style>
@@ -130,6 +130,33 @@ body::before {
   border: 1px solid #5a4028; cursor: pointer;
 }
 #search-wrap { flex: 1; position: relative; }
+
+/* ── Lyrics ticker overlay ── */
+#lyrics-ticker {
+  position: absolute; inset: 0;
+  display: flex; align-items: center;
+  padding: 0 12px 0 30px;
+  overflow: hidden;
+  border-radius: 4px;
+  cursor: text;
+  z-index: 2;
+  pointer-events: auto;
+}
+#lyrics-ticker-inner {
+  white-space: nowrap;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  color: var(--text-dark);
+  letter-spacing: 0.5px;
+  display: inline-block;
+  animation: lyricScroll 18s linear infinite;
+  will-change: transform;
+}
+@keyframes lyricScroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+#lyrics-ticker.hidden { display: none; }
 #search-bar { width: 100%; background: transparent; border: 1px solid rgba(0,0,0,0.6); border-radius: 4px; padding: 7px 12px 7px 30px; font-family: 'Share Tech Mono', monospace; font-size: 12px; color: var(--text-dark); outline: none; letter-spacing: 0.5px; }
 #search-bar::placeholder { color: var(--text-light); } #search-bar:focus { border-color: var(--orange); }
 .search-icon { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); font-size: 12px; color: #5a4030; pointer-events: none; }
@@ -571,7 +598,7 @@ tr.cued.playing td { background: #ffe600 !important; }
 </head>
 <body>
 <script>/* *** BUMP_VERSION_HERE *** */
-const APP_VERSION = 'INDEX 115';
+const APP_VERSION = 'INDEX 116';
 </script>
 <div id="app">
 
@@ -591,6 +618,9 @@ const APP_VERSION = 'INDEX 115';
       </div>
       <div id="search-wrap">
         <span class="search-icon">⌕</span>
+        <div id="lyrics-ticker" class="hidden" title="Tap to search">
+          <span id="lyrics-ticker-inner"></span>
+        </div>
         <input type="text" id="search-bar" placeholder="SEARCH LIBRARY..." oninput="onSearch(this.value)">
       </div>
       <div style="flex-shrink:0; display:flex; align-items:center; padding-right:8px;">
@@ -1955,7 +1985,7 @@ function updatePlayBtn(){
     btn.classList.remove('visible');tr.classList.remove('swipe-open');tr.classList.add('swipe-deleting');activeRow=null;
     setTimeout(()=>{
       const t=library[idx];if(!t)return;if(t.url)URL.revokeObjectURL(t.url);if(t.art)URL.revokeObjectURL(t.art);
-      if(currentIndex===idx){audio.pause();audio.src='';isPlaying=false;currentIndex=-1;resetVU();updatePlayBtn();document.getElementById('player-title').textContent='NO TRACK SELECTED';document.getElementById('player-artist').textContent='— SELECT A TRACK TO BEGIN —';updateArtDisplay();}
+      if(currentIndex===idx){audio.pause();audio.src='';isPlaying=false;currentIndex=-1;resetVU();updatePlayBtn();document.getElementById('player-title').textContent='NO TRACK SELECTED';document.getElementById('player-artist').textContent='— SELECT A TRACK TO BEGIN —';updateArtDisplay();if(typeof updateLyricsTicker==='function')updateLyricsTicker(null);}
       else if(currentIndex>idx)currentIndex--;
       queue=queue.filter(q=>q!==idx).map(q=>q>idx?q-1:q);library.splice(idx,1);updateBadge();renderView();showNotif('TRACK REMOVED');
     },300);
@@ -1996,6 +2026,7 @@ function playTrack(idx){
   document.getElementById('player-artist').textContent=t.artist.toUpperCase()+(t.album!=='Unknown Album'?' — '+t.album.toUpperCase():'');
   updateArtDisplay(); renderView(); updateNowPlayingOverlay();
   queueArtLookup(t);
+  if(typeof updateLyricsTicker==='function') updateLyricsTicker(t);
 
   // playToken guards against stale retries firing after track has changed
   const playToken = {}; playTrack._token = playToken;
@@ -2037,6 +2068,86 @@ function playTrack(idx){
 }
 
 document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(e.code==='Space'){e.preventDefault();togglePlay();}if(e.code==='ArrowRight')nextTrack();if(e.code==='ArrowLeft')prevTrack();if(e.code==='KeyS')toggleShuffle();});
+
+// ── Scrolling Lyrics Ticker ──────────────────────────────────────────────────
+// Shows "NOW PLAYING · title · artist · album ·" scrolling right-to-left
+// in the search bar area. Tap to dismiss ticker and enter search mode.
+// When search is cleared and blurred, ticker returns automatically.
+
+(function(){
+  const wrap   = document.getElementById('search-wrap');
+  const ticker = document.getElementById('lyrics-ticker');
+  const inner  = document.getElementById('lyrics-ticker-inner');
+  const input  = document.getElementById('search-bar');
+  let tickerText = '';
+
+  // Build text from current track — called by updateLyricsTicker() below
+  function buildTickerText(t) {
+    if (!t) return '';
+    const parts = ['♪ NOW PLAYING'];
+    if (t.title || t.name) parts.push((t.title || t.name).toUpperCase());
+    if (t.artist && t.artist !== 'Unknown Artist') parts.push(t.artist.toUpperCase());
+    if (t.album && t.album !== 'Unknown Album')   parts.push(t.album.toUpperCase());
+    // Duplicate for seamless loop (ticker scrolls 50% then resets invisibly)
+    const single = parts.join('  ·  ') + '  ·  ';
+    return single + single;
+  }
+
+  // Adjust animation duration so the scroll speed stays consistent
+  // regardless of text length — target ~80px/s
+  function setScrollDuration(text) {
+    // measure half the string (one full copy)
+    const halfLen = text.length / 2;
+    // rough character width at 12px monospace ≈ 7.2px per char
+    const pxWidth = halfLen * 7.2;
+    const seconds = Math.max(8, pxWidth / 80);
+    inner.style.animationDuration = seconds + 's';
+  }
+
+  window.updateLyricsTicker = function(t) {
+    tickerText = buildTickerText(t);
+    if (!tickerText) {
+      ticker.classList.add('hidden');
+      return;
+    }
+    inner.textContent = tickerText;
+    setScrollDuration(tickerText);
+    // Reset animation so it starts from left each time
+    inner.style.animation = 'none';
+    void inner.offsetWidth; // reflow
+    inner.style.animation = '';
+    // Only show ticker if search input is empty and not focused
+    if (!input.value && document.activeElement !== input) {
+      ticker.classList.remove('hidden');
+    }
+  };
+
+  // Tap ticker → hide it and open search
+  ticker.addEventListener('pointerdown', function(e) {
+    e.preventDefault();
+    ticker.classList.add('hidden');
+    input.focus();
+  });
+
+  // When search input blurs: if empty and we have a track, restore ticker
+  input.addEventListener('blur', function() {
+    if (!input.value && tickerText) {
+      // Small delay so any tap-to-search interaction settles first
+      setTimeout(() => {
+        if (!input.value && document.activeElement !== input) {
+          ticker.classList.remove('hidden');
+        }
+      }, 200);
+    }
+  });
+
+  // When search input is cleared (user deleted text): restore ticker
+  input.addEventListener('input', function() {
+    if (!input.value && tickerText) {
+      // Don't restore immediately — wait for blur
+    }
+  });
+})();
 
 // ── iOS background / foreground recovery ────────────────────────────────────
 // Safari suspends AudioContext and sometimes kills blob URLs when backgrounded.
