@@ -1,5 +1,5 @@
 <!-- ============================================================ -->
-<!-- GoLoco · INDEX 121                                            -->
+<!-- GoLoco · INDEX 122                                            -->
 <!-- ============================================================ -->
 <!DOCTYPE html>
 <html lang="en">
@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="GoLoco">
-<title>GoLoco · INDEX 121</title>
+<title>GoLoco · INDEX 122</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;900&display=swap" rel="stylesheet">
 <style>
@@ -134,35 +134,32 @@ body::before {
 /* ── Synced lyric line display ── */
 #lyrics-ticker {
   position: absolute; inset: 0;
-  display: flex; align-items: stretch;
-  padding: 0;
   overflow: hidden;
   border-radius: 4px;
   cursor: text;
   z-index: 2;
   pointer-events: auto;
 }
-#lyrics-ticker-inner {
+.lyric-slot {
+  position: absolute; inset: 0;
+  display: flex; align-items: center;
   white-space: nowrap;
   font-family: 'DM Sans', sans-serif;
   font-size: 28px;
   font-weight: 900;
   color: #ffffff;
   letter-spacing: 0.2px;
-  display: flex;
-  align-items: center;
   text-shadow: 0 2px 8px rgba(0,0,0,0.6);
   line-height: 1;
   will-change: transform;
   opacity: 0;
-  padding: 0 6px;
+  padding: 0 4px;
 }
 @keyframes lyricScroll {
   from { transform: translateX(var(--ls, 100%)); }
   to   { transform: translateX(var(--le, -100%)); }
 }
 #lyrics-ticker.hidden { display: none; }
-#lyrics-ticker-inner.lyric-fade { opacity: 0; }
 /* Hide search bar border while lyrics ticker is visible */
 #search-wrap:has(#lyrics-ticker:not(.hidden)) #search-bar { border-color: transparent; }
 #search-bar { width: 100%; background: transparent; border: 1px solid rgba(0,0,0,0.6); border-radius: 4px; padding: 7px 12px 7px 30px; font-family: 'Share Tech Mono', monospace; font-size: 12px; color: var(--text-dark); outline: none; letter-spacing: 0.5px; }
@@ -606,7 +603,7 @@ tr.cued.playing td { background: #ffe600 !important; }
 </head>
 <body>
 <script>/* *** BUMP_VERSION_HERE *** */
-const APP_VERSION = 'INDEX 121';
+const APP_VERSION = 'INDEX 122';
 </script>
 <div id="app">
 
@@ -627,7 +624,8 @@ const APP_VERSION = 'INDEX 121';
       <div id="search-wrap">
         <span class="search-icon">⌕</span>
         <div id="lyrics-ticker" class="hidden" title="Tap to search">
-          <span id="lyrics-ticker-inner"></span>
+          <span class="lyric-slot" id="lyric-slot-a"></span>
+          <span class="lyric-slot" id="lyric-slot-b"></span>
         </div>
         <input type="text" id="search-bar" placeholder="SEARCH LIBRARY..." oninput="onSearch(this.value)">
       </div>
@@ -2085,7 +2083,6 @@ document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(
 
 (function(){
   const ticker = document.getElementById('lyrics-ticker');
-  const inner  = document.getElementById('lyrics-ticker-inner');
   const input  = document.getElementById('search-bar');
 
   let lrcLines    = [];   // [{ time: seconds, text: string }] sorted by time
@@ -2118,9 +2115,15 @@ document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(
     return idx;
   }
 
-  // ── Auto-fade timer: fades line out after 4s silence between lines ──────
+  // ── Dual-slot lyric scroller ────────────────────────────────────────────────
+  // Slot A and B alternate. When a new line arrives mid-scroll the active slot
+  // keeps going off the left; the new line scrolls in on the idle slot.
+  const slots = [
+    document.getElementById('lyric-slot-a'),
+    document.getElementById('lyric-slot-b'),
+  ];
+  let activeSlot = 0;   // index into slots[] currently visible/scrolling
   let silenceTimer = null;
-  let isScrolling = false; // true while a line is mid-scroll
 
   function clearSilenceTimer() {
     if (silenceTimer) { clearTimeout(silenceTimer); silenceTimer = null; }
@@ -2129,58 +2132,56 @@ document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(
   function armSilenceTimer() {
     clearSilenceTimer();
     silenceTimer = setTimeout(() => {
-      // 1.5s CSS fade-out
-      inner.style.transition = 'opacity 1.5s ease';
-      inner.style.opacity = '0';
-      isScrolling = false;
+      // Fade out the active slot over 1.5s
+      const sl = slots[activeSlot];
+      sl.style.transition = 'opacity 1.5s ease';
+      sl.style.opacity = '0';
     }, 4000);
   }
 
-  // ── Scroll a lyric line right-to-left ─────────────────────────────────
-  function scrollLine(text) {
-    clearSilenceTimer();
+  function launchSlot(slotIdx, text) {
+    const sl = slots[slotIdx];
+    // Reset slot
+    sl.style.transition = 'none';
+    sl.style.animation  = 'none';
+    sl.style.opacity    = '0';
+    void sl.offsetWidth; // reflow
 
-    if (isScrolling) {
-      // Previous line still scrolling — just swap the text in place and let
-      // the existing animation carry it off the left edge naturally.
-      // Snap opacity up in case a fade was in progress.
-      inner.style.transition = 'none';
-      inner.style.opacity = '1';
-      inner.textContent = text;
-      armSilenceTimer();
-      return;
-    }
-
-    // Fresh start — reset and launch from right edge
-    inner.style.transition = 'none';
-    inner.style.opacity = '0';
-    inner.style.animation = 'none';
-    void inner.offsetWidth; // reflow
-
-    inner.textContent = text;
+    sl.textContent = text;
 
     const containerW = ticker.offsetWidth;
-    const textW = inner.scrollWidth;
+    const textW = sl.scrollWidth;
     const travelPx = containerW + textW;
-    // Speed: ~150px/s (slowed by a third from 200)
-    const dur = Math.max(3, travelPx / 150);
-    inner.style.setProperty('--ls', containerW + 'px');
-    inner.style.setProperty('--le', '-' + textW + 'px');
-    inner.style.animation = 'lyricScroll ' + dur + 's linear';
-
-    isScrolling = true;
+    // Speed: ~113px/s (150 × 0.75)
+    const dur = Math.max(4, travelPx / 113);
+    sl.style.setProperty('--ls', containerW + 'px');
+    sl.style.setProperty('--le', '-' + textW + 'px');
+    sl.style.animation = 'lyricScroll ' + dur + 's linear';
 
     // Fade in
     requestAnimationFrame(() => {
-      inner.style.transition = 'opacity 0.15s ease';
-      inner.style.opacity = '1';
+      sl.style.transition = 'opacity 0.15s ease';
+      sl.style.opacity = '1';
     });
+  }
 
-    // When scroll completes, mark done so next line gets a fresh start
-    inner.addEventListener('animationend', function onEnd() {
-      inner.removeEventListener('animationend', onEnd);
-      isScrolling = false;
-    }, { once: true });
+  function scrollLine(text) {
+    clearSilenceTimer();
+
+    const currentSl = slots[activeSlot];
+    const isVisible  = parseFloat(currentSl.style.opacity || '0') > 0.05;
+    const isMoving   = currentSl.style.animation && currentSl.style.animation !== 'none'
+                       && currentSl.style.animationPlayState !== 'paused';
+
+    if (isVisible && isMoving) {
+      // Previous line still scrolling — let it continue off left, new line scrolls in on idle slot
+      const nextSlot = 1 - activeSlot;
+      activeSlot = nextSlot;
+      launchSlot(nextSlot, text);
+    } else {
+      // No line currently scrolling — fresh start on active slot
+      launchSlot(activeSlot, text);
+    }
 
     armSilenceTimer();
   }
@@ -2196,9 +2197,7 @@ document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(
         scrollLine(text);
       } else {
         clearSilenceTimer();
-        inner.style.animation = 'none';
-        inner.style.opacity = '0';
-        inner.textContent = '';
+        slots.forEach(sl => { sl.style.animation = 'none'; sl.style.opacity = '0'; sl.textContent = ''; });
       }
     }
     lrcRaf = requestAnimationFrame(syncLoop);
@@ -2219,51 +2218,10 @@ document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(
     hasLyrics = false;
     lrcLines = [];
     lastLineIdx = -1;
-    inner.style.animation = 'none';
-    inner.style.opacity = '0';
-    inner.textContent = '';
+    activeSlot = 0;
+    slots.forEach(sl => { sl.style.animation = 'none'; sl.style.opacity = '0'; sl.textContent = ''; });
     ticker.classList.add('hidden');
   }
-
-  // ── Fetch from LRCLIB ─────────────────────────────────────────────────────
-  window.updateLyricsTicker = async function(t) {
-    clearLyrics();
-    if (!t) return;
-
-    const artist = (t.artist && t.artist !== 'Unknown Artist') ? t.artist : '';
-    const title  = t.title || t.name || '';
-    if (!artist || !title) return;
-
-    try {
-      const params = new URLSearchParams({ artist_name: artist, track_name: title });
-      if (t.album && t.album !== 'Unknown Album') params.set('album_name', t.album);
-      if (t.duration) params.set('duration', Math.round(t.duration));
-
-      const res = await fetch(`https://lrclib.net/api/get?${params}`, {
-        headers: { 'Lrclib-Client': 'GoLoco/116 (https://github.com/pwb-73/GoLoco)' }
-      });
-
-      if (!res.ok) return; // 404 = no lyrics, silently leave bar empty
-
-      const data = await res.json();
-      const lrcText = data.syncedLyrics || '';
-      if (!lrcText) return; // plain lyrics only — skip (no timestamps)
-
-      const parsed = parseLRC(lrcText);
-      if (!parsed.length) return;
-
-      lrcLines = parsed;
-      hasLyrics = true;
-      lastLineIdx = -1;
-
-      if (!searchActive && !input.value) {
-        ticker.classList.remove('hidden');
-        startSync();
-      }
-    } catch (e) {
-      // Network error — leave bar empty, don't throw
-    }
-  };
 
   // Resume sync when audio plays (covers pause→resume, bg→fg return)
   audio.addEventListener('play', () => {
@@ -2294,7 +2252,7 @@ document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(
             else {
               // Show the line at current time statically
               const idx = currentLineIdx(audio.currentTime);
-              if (idx >= 0) inner.textContent = lrcLines[idx].text;
+              if (idx >= 0) scrollLine(lrcLines[idx].text);
             }
           }
         }
