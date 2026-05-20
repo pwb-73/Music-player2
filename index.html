@@ -1,5 +1,5 @@
 <!-- ============================================================ -->
-<!-- GoLoco · INDEX 116                                            -->
+<!-- GoLoco · INDEX 117                                            -->
 <!-- ============================================================ -->
 <!DOCTYPE html>
 <html lang="en">
@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="GoLoco">
-<title>GoLoco · INDEX 116</title>
+<title>GoLoco · INDEX 117</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;900&display=swap" rel="stylesheet">
 <style>
@@ -131,11 +131,11 @@ body::before {
 }
 #search-wrap { flex: 1; position: relative; }
 
-/* ── Lyrics ticker overlay ── */
+/* ── Synced lyric line display ── */
 #lyrics-ticker {
   position: absolute; inset: 0;
   display: flex; align-items: center;
-  padding: 0 12px 0 30px;
+  padding: 0 10px 0 10px;
   overflow: hidden;
   border-radius: 4px;
   cursor: text;
@@ -144,19 +144,20 @@ body::before {
 }
 #lyrics-ticker-inner {
   white-space: nowrap;
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 12px;
-  color: var(--text-dark);
-  letter-spacing: 0.5px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: 0.3px;
   display: inline-block;
-  animation: lyricScroll 18s linear infinite;
-  will-change: transform;
-}
-@keyframes lyricScroll {
-  0%   { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
+  text-shadow: 0 1px 6px rgba(0,0,0,0.5);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  transition: opacity 0.25s ease;
 }
 #lyrics-ticker.hidden { display: none; }
+#lyrics-ticker-inner.lyric-fade { opacity: 0; }
 #search-bar { width: 100%; background: transparent; border: 1px solid rgba(0,0,0,0.6); border-radius: 4px; padding: 7px 12px 7px 30px; font-family: 'Share Tech Mono', monospace; font-size: 12px; color: var(--text-dark); outline: none; letter-spacing: 0.5px; }
 #search-bar::placeholder { color: var(--text-light); } #search-bar:focus { border-color: var(--orange); }
 .search-icon { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); font-size: 12px; color: #5a4030; pointer-events: none; }
@@ -598,7 +599,7 @@ tr.cued.playing td { background: #ffe600 !important; }
 </head>
 <body>
 <script>/* *** BUMP_VERSION_HERE *** */
-const APP_VERSION = 'INDEX 116';
+const APP_VERSION = 'INDEX 117';
 </script>
 <div id="app">
 
@@ -2069,84 +2070,165 @@ function playTrack(idx){
 
 document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(e.code==='Space'){e.preventDefault();togglePlay();}if(e.code==='ArrowRight')nextTrack();if(e.code==='ArrowLeft')prevTrack();if(e.code==='KeyS')toggleShuffle();});
 
-// ── Scrolling Lyrics Ticker ──────────────────────────────────────────────────
-// Shows "NOW PLAYING · title · artist · album ·" scrolling right-to-left
-// in the search bar area. Tap to dismiss ticker and enter search mode.
-// When search is cleared and blurred, ticker returns automatically.
+// ── Synced Lyrics Display (LRCLIB) ──────────────────────────────────────────
+// Fetches time-synced LRC lyrics from LRCLIB (free, no API key).
+// Displays the current lyric line in the search bar area — large, bold, white.
+// Tap the area to dismiss and open search. Blurring empty search restores lyrics.
+// If no lyrics found for a track, the area stays empty (normal search bar).
 
 (function(){
-  const wrap   = document.getElementById('search-wrap');
   const ticker = document.getElementById('lyrics-ticker');
   const inner  = document.getElementById('lyrics-ticker-inner');
   const input  = document.getElementById('search-bar');
-  let tickerText = '';
 
-  // Build text from current track — called by updateLyricsTicker() below
-  function buildTickerText(t) {
-    if (!t) return '';
-    const parts = ['♪ NOW PLAYING'];
-    if (t.title || t.name) parts.push((t.title || t.name).toUpperCase());
-    if (t.artist && t.artist !== 'Unknown Artist') parts.push(t.artist.toUpperCase());
-    if (t.album && t.album !== 'Unknown Album')   parts.push(t.album.toUpperCase());
-    // Duplicate for seamless loop (ticker scrolls 50% then resets invisibly)
-    const single = parts.join('  ·  ') + '  ·  ';
-    return single + single;
+  let lrcLines    = [];   // [{ time: seconds, text: string }] sorted by time
+  let lrcRaf      = null; // requestAnimationFrame handle for sync loop
+  let lastLineIdx = -1;   // last line index shown (avoid redundant DOM writes)
+  let hasLyrics   = false;
+  let searchActive = false; // true while user is in search mode
+
+  // ── LRC parser ────────────────────────────────────────────────────────────
+  function parseLRC(lrc) {
+    const lines = [];
+    lrc.split('\n').forEach(raw => {
+      const m = raw.match(/^\[(\d+):(\d+)\.(\d+)\](.*)/);
+      if (!m) return;
+      const secs = parseInt(m[1]) * 60 + parseInt(m[2]) + parseInt(m[3]) / 100;
+      const text = m[4].trim();
+      if (text) lines.push({ time: secs, text });
+    });
+    lines.sort((a, b) => a.time - b.time);
+    return lines;
   }
 
-  // Adjust animation duration so the scroll speed stays consistent
-  // regardless of text length — target ~80px/s
-  function setScrollDuration(text) {
-    // measure half the string (one full copy)
-    const halfLen = text.length / 2;
-    // rough character width at 12px monospace ≈ 7.2px per char
-    const pxWidth = halfLen * 7.2;
-    const seconds = Math.max(8, pxWidth / 80);
-    inner.style.animationDuration = seconds + 's';
-  }
-
-  window.updateLyricsTicker = function(t) {
-    tickerText = buildTickerText(t);
-    if (!tickerText) {
-      ticker.classList.add('hidden');
-      return;
+  // ── Find which line to show for a given playback time ─────────────────────
+  function currentLineIdx(t) {
+    let idx = -1;
+    for (let i = 0; i < lrcLines.length; i++) {
+      if (lrcLines[i].time <= t) idx = i;
+      else break;
     }
-    inner.textContent = tickerText;
-    setScrollDuration(tickerText);
-    // Reset animation so it starts from left each time
-    inner.style.animation = 'none';
-    void inner.offsetWidth; // reflow
-    inner.style.animation = '';
-    // Only show ticker if search input is empty and not focused
-    if (!input.value && document.activeElement !== input) {
-      ticker.classList.remove('hidden');
+    return idx;
+  }
+
+  // ── RAF loop — runs while lyrics are active and audio is playing ──────────
+  function syncLoop() {
+    if (!hasLyrics || searchActive) { lrcRaf = null; return; }
+    const idx = currentLineIdx(audio.currentTime);
+    if (idx !== lastLineIdx) {
+      lastLineIdx = idx;
+      const text = idx >= 0 ? lrcLines[idx].text : '';
+      if (text) {
+        // Fade out → swap → fade in
+        inner.classList.add('lyric-fade');
+        setTimeout(() => {
+          inner.textContent = text;
+          inner.classList.remove('lyric-fade');
+        }, 130);
+      } else {
+        inner.textContent = '';
+      }
+    }
+    lrcRaf = requestAnimationFrame(syncLoop);
+  }
+
+  function startSync() {
+    if (lrcRaf) return;
+    lrcRaf = requestAnimationFrame(syncLoop);
+  }
+
+  function stopSync() {
+    if (lrcRaf) { cancelAnimationFrame(lrcRaf); lrcRaf = null; }
+  }
+
+  function clearLyrics() {
+    stopSync();
+    hasLyrics = false;
+    lrcLines = [];
+    lastLineIdx = -1;
+    inner.textContent = '';
+    ticker.classList.add('hidden');
+  }
+
+  // ── Fetch from LRCLIB ─────────────────────────────────────────────────────
+  window.updateLyricsTicker = async function(t) {
+    clearLyrics();
+    if (!t) return;
+
+    const artist = (t.artist && t.artist !== 'Unknown Artist') ? t.artist : '';
+    const title  = t.title || t.name || '';
+    if (!artist || !title) return;
+
+    try {
+      const params = new URLSearchParams({ artist_name: artist, track_name: title });
+      if (t.album && t.album !== 'Unknown Album') params.set('album_name', t.album);
+      if (t.duration) params.set('duration', Math.round(t.duration));
+
+      const res = await fetch(`https://lrclib.net/api/get?${params}`, {
+        headers: { 'Lrclib-Client': 'GoLoco/116 (https://github.com/pwb-73/GoLoco)' }
+      });
+
+      if (!res.ok) return; // 404 = no lyrics, silently leave bar empty
+
+      const data = await res.json();
+      const lrcText = data.syncedLyrics || '';
+      if (!lrcText) return; // plain lyrics only — skip (no timestamps)
+
+      const parsed = parseLRC(lrcText);
+      if (!parsed.length) return;
+
+      lrcLines = parsed;
+      hasLyrics = true;
+      lastLineIdx = -1;
+
+      if (!searchActive && !input.value) {
+        ticker.classList.remove('hidden');
+        startSync();
+      }
+    } catch (e) {
+      // Network error — leave bar empty, don't throw
     }
   };
 
-  // Tap ticker → hide it and open search
+  // Resume sync when audio plays (covers pause→resume, bg→fg return)
+  audio.addEventListener('play', () => {
+    if (hasLyrics && !searchActive) startSync();
+  });
+  audio.addEventListener('pause', () => stopSync());
+  audio.addEventListener('ended', () => stopSync());
+
+  // ── Tap ticker → search mode ───────────────────────────────────────────────
   ticker.addEventListener('pointerdown', function(e) {
     e.preventDefault();
+    searchActive = true;
+    stopSync();
     ticker.classList.add('hidden');
     input.focus();
   });
 
-  // When search input blurs: if empty and we have a track, restore ticker
+  // ── Blur empty search → restore lyrics ────────────────────────────────────
   input.addEventListener('blur', function() {
-    if (!input.value && tickerText) {
-      // Small delay so any tap-to-search interaction settles first
+    if (!input.value) {
       setTimeout(() => {
         if (!input.value && document.activeElement !== input) {
-          ticker.classList.remove('hidden');
+          searchActive = false;
+          if (hasLyrics) {
+            lastLineIdx = -1; // force immediate redraw at current time
+            ticker.classList.remove('hidden');
+            if (!audio.paused) startSync();
+            else {
+              // Show the line at current time statically
+              const idx = currentLineIdx(audio.currentTime);
+              if (idx >= 0) inner.textContent = lrcLines[idx].text;
+            }
+          }
         }
       }, 200);
     }
   });
 
-  // When search input is cleared (user deleted text): restore ticker
-  input.addEventListener('input', function() {
-    if (!input.value && tickerText) {
-      // Don't restore immediately — wait for blur
-    }
-  });
+  // When user types in search, ensure sync is off
+  input.addEventListener('focus', () => { searchActive = true; stopSync(); });
 })();
 
 // ── iOS background / foreground recovery ────────────────────────────────────
