@@ -1,5 +1,5 @@
 <!-- ============================================================ -->
-<!-- GoLoco · INDEX 130                                            -->
+<!-- GoLoco · INDEX 131                                            -->
 <!-- ============================================================ -->
 <!DOCTYPE html>
 <html lang="en">
@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="GoLoco">
-<title>GoLoco · INDEX 130</title>
+<title>GoLoco · INDEX 131</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;900&display=swap" rel="stylesheet">
 <style>
@@ -154,10 +154,6 @@ body::before {
   will-change: transform;
   opacity: 0;
   padding: 0 4px;
-}
-@keyframes lyricScroll {
-  from { transform: translateX(var(--ls, 100%)); }
-  to   { transform: translateX(var(--le, -100%)); }
 }
 #lyrics-ticker.hidden { display: none; }
 /* Hide search bar border while lyrics ticker is visible */
@@ -603,7 +599,7 @@ tr.cued.playing td { background: #ffe600 !important; }
 </head>
 <body>
 <script>/* *** BUMP_VERSION_HERE *** */
-const APP_VERSION = 'INDEX 130';
+const APP_VERSION = 'INDEX 131';
 </script>
 <div id="app">
 
@@ -2122,32 +2118,58 @@ document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(
     document.getElementById('lyric-slot-a'),
     document.getElementById('lyric-slot-b'),
   ];
+  // RAF-driven scroll — no CSS animation, full JS control
+  let scrollRaf  = null;
+  let scrollX    = 0;
+  let scrollDest = 0;
+  let scrollSpeed = 0; // px per ms
+
+  function stopScroll() {
+    if (scrollRaf) { cancelAnimationFrame(scrollRaf); scrollRaf = null; }
+  }
+
   function scrollLine(text) {
-    // Hard reset the single slot
+    stopScroll();
+
     const sl = slots[0];
     sl.style.transition = 'none';
-    sl.style.animation  = 'none';
+    sl.style.transform  = 'none';
     sl.style.opacity    = '1';
-    sl.textContent      = '';
-    void sl.offsetWidth;
+    sl.textContent      = text;
 
-    sl.textContent = text;
-    void sl.offsetWidth;
-
+    // Measure after setting text
     const containerW = ticker.offsetWidth;
     const textW      = sl.scrollWidth;
-    const travelPx   = containerW + textW;
-    const dur        = Math.max(4, travelPx / 113);
-    sl.style.setProperty('--ls', containerW + 'px');
-    sl.style.setProperty('--le', '-' + textW + 'px');
-    sl.style.animation = 'lyricScroll ' + dur + 's linear forwards';
 
-    // Once fully scrolled off left, clear text so it doesn't snap back visibly
-    sl.addEventListener('animationend', () => {
-      sl.style.animation = 'none';
-      sl.style.transform = 'none';
-      sl.textContent = '';
-    }, { once: true });
+    // Start just off the right edge, end just off the left edge
+    scrollX    = containerW;          // current x position
+    scrollDest = -textW;              // target x position
+    scrollSpeed = (containerW + textW) / (113 * (1/60)); // px per frame at 60fps... 
+    // simpler: pixels per millisecond
+    const pxPerMs = 113 / 1000;      // 113px/s → px/ms
+
+    sl.style.transform = 'translateX(' + scrollX + 'px)';
+
+    let last = null;
+    function step(ts) {
+      if (last === null) last = ts;
+      const delta = ts - last;
+      last = ts;
+
+      scrollX -= pxPerMs * delta;
+      sl.style.transform = 'translateX(' + scrollX + 'px)';
+
+      if (scrollX > scrollDest) {
+        scrollRaf = requestAnimationFrame(step);
+      } else {
+        // Fully off screen — clear cleanly
+        sl.style.transform = 'none';
+        sl.textContent     = '';
+        scrollRaf = null;
+      }
+    }
+
+    scrollRaf = requestAnimationFrame(step);
   }
 
   // ── RAF loop — runs while lyrics are active and audio is playing ──────────
@@ -2160,8 +2182,9 @@ document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(
       if (text) {
         scrollLine(text);
       } else {
+        stopScroll();
         const sl = slots[0];
-        sl.style.animation = 'none';
+        sl.style.transform = 'none';
         sl.style.opacity   = '1';
         sl.textContent     = '';
       }
@@ -2176,6 +2199,7 @@ document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(
 
   function stopSync() {
     if (lrcRaf) { cancelAnimationFrame(lrcRaf); lrcRaf = null; }
+    stopScroll();
   }
 
   function clearLyrics() {
@@ -2184,7 +2208,7 @@ document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(
     lrcLines = [];
     lastLineIdx = -1;
     const sl = slots[0];
-    sl.style.animation = 'none';
+    sl.style.transform = 'none';
     sl.style.opacity   = '1';
     sl.textContent     = '';
     ticker.classList.add('hidden');
