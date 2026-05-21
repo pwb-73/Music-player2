@@ -1,5 +1,5 @@
 <!-- ============================================================ -->
-<!-- GoLoco · INDEX 126                                            -->
+<!-- GoLoco · INDEX 127                                            -->
 <!-- ============================================================ -->
 <!DOCTYPE html>
 <html lang="en">
@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="GoLoco">
-<title>GoLoco · INDEX 126</title>
+<title>GoLoco · INDEX 127</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;900&display=swap" rel="stylesheet">
 <style>
@@ -603,7 +603,7 @@ tr.cued.playing td { background: #ffe600 !important; }
 </head>
 <body>
 <script>/* *** BUMP_VERSION_HERE *** */
-const APP_VERSION = 'INDEX 126';
+const APP_VERSION = 'INDEX 127';
 </script>
 <div id="app">
 
@@ -2175,34 +2175,28 @@ document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(
     }, { once: true });
   }
 
-  // Timestamp (ms) when the current slot's scroll animation will finish
-  let scrollFinishTime = 0;
-
   function scrollLine(text) {
     clearSilenceTimer();
 
-    const now = performance.now();
-    // If current slot is genuinely still mid-scroll, skip this line
-    if (now < scrollFinishTime) return;
+    // Always launch — never skip. Each new LRC line immediately replaces
+    // whatever is showing. The old slot is force-cleared first.
+    slots.forEach(sl => {
+      sl.style.animation  = 'none';
+      sl.style.transition = 'none';
+      sl.style.opacity    = '0';
+      sl.textContent      = '';
+    });
+    activeSlot = 0; // always use slot A for simplicity
 
-    launchSlot(activeSlot, text);
+    launchSlot(0, text);
 
-    // Calculate how long this scroll will take and record finish time
-    const sl         = slots[activeSlot];
-    const containerW = ticker.offsetWidth;
-    const textW      = sl.scrollWidth;
-    const travelPx   = containerW + textW;
-    const scrollDur  = Math.max(4, travelPx / 113) * 1000; // ms
-    scrollFinishTime = now + scrollDur;
-
-    // Silence timer fires after scroll completes + buffer
-    const fadeDelay = scrollDur + 500;
+    // Silence timer: fires 4s after this line launches, fades over 1.5s
     silenceTimer = setTimeout(() => {
-      const s = slots[activeSlot];
+      const s = slots[0];
       s.style.transition = 'opacity 1.5s ease';
       s.style.opacity    = '0';
       setTimeout(() => { s.textContent = ''; s.style.animation = 'none'; }, 1600);
-    }, fadeDelay);
+    }, 4000);
   }
 
   // ── RAF loop — runs while lyrics are active and audio is playing ──────────
@@ -2238,7 +2232,6 @@ document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(
     lrcLines = [];
     lastLineIdx = -1;
     activeSlot = 0;
-    scrollFinishTime = 0;
     slots.forEach(sl => { sl.style.animation = 'none'; sl.style.opacity = '0'; sl.textContent = ''; });
     ticker.classList.add('hidden');
   }
