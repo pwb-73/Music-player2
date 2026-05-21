@@ -1,5 +1,5 @@
 <!-- ============================================================ -->
-<!-- GoLoco · INDEX 128                                            -->
+<!-- GoLoco · INDEX 129                                            -->
 <!-- ============================================================ -->
 <!DOCTYPE html>
 <html lang="en">
@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="GoLoco">
-<title>GoLoco · INDEX 128</title>
+<title>GoLoco · INDEX 129</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;900&display=swap" rel="stylesheet">
 <style>
@@ -603,7 +603,7 @@ tr.cued.playing td { background: #ffe600 !important; }
 </head>
 <body>
 <script>/* *** BUMP_VERSION_HERE *** */
-const APP_VERSION = 'INDEX 128';
+const APP_VERSION = 'INDEX 129';
 </script>
 <div id="app">
 
@@ -2122,68 +2122,25 @@ document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(
     document.getElementById('lyric-slot-a'),
     document.getElementById('lyric-slot-b'),
   ];
-  let activeSlot = 0;   // index into slots[] currently visible/scrolling
-  let silenceTimer = null;
-
-  function clearSilenceTimer() {
-    if (silenceTimer) { clearTimeout(silenceTimer); silenceTimer = null; }
-  }
-
-  function armSilenceTimer() {
-    clearSilenceTimer();
-    silenceTimer = setTimeout(() => {
-      // Fade out the active slot over 1.5s
-      const sl = slots[activeSlot];
-      sl.style.transition = 'opacity 1.5s ease';
-      sl.style.opacity = '0';
-    }, 4000);
-  }
-
-  function launchSlot(slotIdx, text) {
-    const sl = slots[slotIdx];
-
-    // Hard reset
+  function scrollLine(text) {
+    // Hard reset the single slot
+    const sl = slots[0];
     sl.style.transition = 'none';
     sl.style.animation  = 'none';
     sl.style.opacity    = '1';
     sl.textContent      = '';
-    void sl.offsetWidth; // reflow
+    void sl.offsetWidth;
 
     sl.textContent = text;
-    void sl.offsetWidth; // reflow again after text set so scrollWidth is accurate
+    void sl.offsetWidth;
 
     const containerW = ticker.offsetWidth;
     const textW      = sl.scrollWidth;
     const travelPx   = containerW + textW;
-    // Speed: ~113px/s — no 'forwards', text scrolls off left and is just gone
-    const dur = Math.max(4, travelPx / 113);
+    const dur        = Math.max(4, travelPx / 113);
     sl.style.setProperty('--ls', containerW + 'px');
     sl.style.setProperty('--le', '-' + textW + 'px');
-    // 'normal' fill: when animation ends element snaps back to default transform
-    // but we clear textContent via silence timer so nothing is visible
     sl.style.animation = 'lyricScroll ' + dur + 's linear';
-  }
-
-  function scrollLine(text) {
-    clearSilenceTimer();
-
-    // Clear all slots cleanly — new line scrolls in immediately
-    slots.forEach(sl => {
-      sl.style.transition = 'none';
-      sl.style.animation  = 'none';
-      sl.textContent      = '';
-    });
-    activeSlot = 0; // always use slot A for simplicity
-
-    launchSlot(0, text);
-
-    // Silence timer: fires 4s after this line launches, fades over 1.5s
-    silenceTimer = setTimeout(() => {
-      const s = slots[0];
-      s.style.transition = 'opacity 1.5s ease';
-      s.style.opacity    = '0';
-      setTimeout(() => { s.textContent = ''; s.style.animation = 'none'; }, 1600);
-    }, 4000);
   }
 
   // ── RAF loop — runs while lyrics are active and audio is playing ──────────
@@ -2196,8 +2153,10 @@ document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(
       if (text) {
         scrollLine(text);
       } else {
-        clearSilenceTimer();
-        slots.forEach(sl => { sl.style.animation = 'none'; sl.style.opacity = '0'; sl.textContent = ''; });
+        const sl = slots[0];
+        sl.style.animation = 'none';
+        sl.style.opacity   = '1';
+        sl.textContent     = '';
       }
     }
     lrcRaf = requestAnimationFrame(syncLoop);
@@ -2210,7 +2169,6 @@ document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(
 
   function stopSync() {
     if (lrcRaf) { cancelAnimationFrame(lrcRaf); lrcRaf = null; }
-    clearSilenceTimer();
   }
 
   function clearLyrics() {
@@ -2218,8 +2176,10 @@ document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(
     hasLyrics = false;
     lrcLines = [];
     lastLineIdx = -1;
-    activeSlot = 0;
-    slots.forEach(sl => { sl.style.animation = 'none'; sl.style.opacity = '0'; sl.textContent = ''; });
+    const sl = slots[0];
+    sl.style.animation = 'none';
+    sl.style.opacity   = '1';
+    sl.textContent     = '';
     ticker.classList.add('hidden');
   }
 
