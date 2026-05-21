@@ -1,5 +1,5 @@
 <!-- ============================================================ -->
-<!-- GoLoco · INDEX 129                                            -->
+<!-- GoLoco · INDEX 130                                            -->
 <!-- ============================================================ -->
 <!DOCTYPE html>
 <html lang="en">
@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="GoLoco">
-<title>GoLoco · INDEX 129</title>
+<title>GoLoco · INDEX 130</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;900&display=swap" rel="stylesheet">
 <style>
@@ -603,7 +603,7 @@ tr.cued.playing td { background: #ffe600 !important; }
 </head>
 <body>
 <script>/* *** BUMP_VERSION_HERE *** */
-const APP_VERSION = 'INDEX 129';
+const APP_VERSION = 'INDEX 130';
 </script>
 <div id="app">
 
@@ -2140,7 +2140,14 @@ document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(
     const dur        = Math.max(4, travelPx / 113);
     sl.style.setProperty('--ls', containerW + 'px');
     sl.style.setProperty('--le', '-' + textW + 'px');
-    sl.style.animation = 'lyricScroll ' + dur + 's linear';
+    sl.style.animation = 'lyricScroll ' + dur + 's linear forwards';
+
+    // Once fully scrolled off left, clear text so it doesn't snap back visibly
+    sl.addEventListener('animationend', () => {
+      sl.style.animation = 'none';
+      sl.style.transform = 'none';
+      sl.textContent = '';
+    }, { once: true });
   }
 
   // ── RAF loop — runs while lyrics are active and audio is playing ──────────
