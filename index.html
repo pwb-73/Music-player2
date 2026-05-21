@@ -1,5 +1,5 @@
 <!-- ============================================================ -->
-<!-- GoLoco · INDEX 125                                            -->
+<!-- GoLoco · INDEX 126                                            -->
 <!-- ============================================================ -->
 <!DOCTYPE html>
 <html lang="en">
@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="GoLoco">
-<title>GoLoco · INDEX 125</title>
+<title>GoLoco · INDEX 126</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;900&display=swap" rel="stylesheet">
 <style>
@@ -603,7 +603,7 @@ tr.cued.playing td { background: #ffe600 !important; }
 </head>
 <body>
 <script>/* *** BUMP_VERSION_HERE *** */
-const APP_VERSION = 'INDEX 125';
+const APP_VERSION = 'INDEX 126';
 </script>
 <div id="app">
 
@@ -2166,39 +2166,37 @@ document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(
       sl.style.opacity    = '1';
     });
 
-    // Mark scrolling in progress
-    slotScrolling[slotIdx] = true;
-
-    // When scroll finishes: fade out, clear, mark slot free
+    // When scroll finishes: fade out and clear to prevent ghost text
     sl.addEventListener('animationend', function onDone() {
       sl.removeEventListener('animationend', onDone);
-      slotScrolling[slotIdx] = false;
       sl.style.transition = 'opacity 0.4s ease';
       sl.style.opacity    = '0';
       setTimeout(() => { sl.textContent = ''; sl.style.animation = 'none'; }, 450);
     }, { once: true });
   }
 
-  // Track whether each slot is still mid-scroll
-  const slotScrolling = [false, false];
+  // Timestamp (ms) when the current slot's scroll animation will finish
+  let scrollFinishTime = 0;
 
   function scrollLine(text) {
     clearSilenceTimer();
 
-    // If the active slot is still scrolling, skip — let it finish.
-    // The RAF loop will call us again on the next LRC timestamp change,
-    // and any pause in the song will let the queue catch up naturally.
-    if (slotScrolling[activeSlot]) return;
+    const now = performance.now();
+    // If current slot is genuinely still mid-scroll, skip this line
+    if (now < scrollFinishTime) return;
 
     launchSlot(activeSlot, text);
 
-    // Silence timer fires only after scroll completes + buffer
+    // Calculate how long this scroll will take and record finish time
     const sl         = slots[activeSlot];
     const containerW = ticker.offsetWidth;
     const textW      = sl.scrollWidth;
     const travelPx   = containerW + textW;
-    const scrollDur  = Math.max(4, travelPx / 113) * 1000;
-    const fadeDelay  = Math.max(4000, scrollDur + 500);
+    const scrollDur  = Math.max(4, travelPx / 113) * 1000; // ms
+    scrollFinishTime = now + scrollDur;
+
+    // Silence timer fires after scroll completes + buffer
+    const fadeDelay = scrollDur + 500;
     silenceTimer = setTimeout(() => {
       const s = slots[activeSlot];
       s.style.transition = 'opacity 1.5s ease';
@@ -2240,7 +2238,7 @@ document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(
     lrcLines = [];
     lastLineIdx = -1;
     activeSlot = 0;
-    slotScrolling[0] = false; slotScrolling[1] = false;
+    scrollFinishTime = 0;
     slots.forEach(sl => { sl.style.animation = 'none'; sl.style.opacity = '0'; sl.textContent = ''; });
     ticker.classList.add('hidden');
   }
